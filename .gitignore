@@ -1,4 +1,5 @@
 /venv/
 /shelf/
 /workspace.xml
-timeList.csv
+*.csv
+*.ui
