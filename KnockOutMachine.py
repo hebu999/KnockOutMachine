@@ -18,17 +18,18 @@ class Ui_MainWindow(object):
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
 
-    def setupUi(self, MainWindow):
+    def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        # TODO show different pictures depending on timer
         self.pictures = QtWidgets.QGraphicsView(self.centralwidget)
         brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.NoBrush)
         self.pictures.setBackgroundBrush(brush)
         self.pictures.setObjectName("pictures")
-        self.pictures.setGeometry(QtCore.QRect(700, 50, 700, 700))
+        self.pictures.setFixedSize(900, 900)
 
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
         self.startButton.setFixedSize(171, 51)
@@ -37,19 +38,19 @@ class Ui_MainWindow(object):
         font.setWeight(99)
         self.startButton.setFont(font)
         self.startButton.setObjectName("startButton")
-        self.startButton.clicked.connect(lambda: self.onStartButtonClicked())
+        self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
         self.highscoreButton.setFont(font)
         self.highscoreButton.setObjectName("highscoreButton")
         self.highscoreButton.setFixedSize(171, 51)
-        self.highscoreButton.clicked.connect(lambda: self.onHighScoreButtonClicked())
+        self.highscoreButton.clicked.connect(lambda: self.on_start_button_clicked())
 
         self.cancelButton = QtWidgets.QPushButton(self.centralwidget)
         self.cancelButton.setFont(font)
         self.cancelButton.setObjectName("cancelButton")
         self.cancelButton.setFixedSize(171, 51)
-        self.cancelButton.clicked.connect(lambda: self.exitfunction())
+        self.cancelButton.clicked.connect(lambda: self.exit_function())
         self.cancelButton.hide()
 
         self.lcdCounter = QtWidgets.QLCDNumber(self.centralwidget)
@@ -75,10 +76,10 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.retranslateUi(MainWindow)
+        self.retranslate_ui(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def retranslateUi(self, MainWindow):
+    def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("KnockOutMachine", "KnockOutMachine"))
         MainWindow.showMaximized()
@@ -92,41 +93,48 @@ class Ui_MainWindow(object):
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
 
-    def exitfunction(self):
-        self.rpi.device.exit()
-        self.highscoreButton.show()
-        self.startButton.show()
-
-    # TODO add calculation
-    def onStartButtonClicked(self):
-        self.rpi.mainloop(blocking=False)
+    # TODO test Timer and reg_event
+    def on_start_button_clicked(self):
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
+        self.rpi.mainloop(blocking=False)
 
-        self.rpi.io.I_1.regevent(self.calculateTime)
+        self.rpi.io.I_1.reg_event(self.start_timer)
 
         # newTime = input("Bitte Zeit eingeben: ")
         # inputName = str(input("Bitte Namen eingeben: "))
         # self.updateScores(inputName, newTime)
 
-    # TODO show HighscoreList
-    def onHighScoreButtonClicked(self):
+    # TODO show Highscore List on click
+    def on_high_score_button_clicked(self):
         print("Dies ist eine Bestenliste")
         self.highscoreButton.hide()
+        self.startButton.hide()
+        self.pictures.hide()
         return None
 
-    def calculateTime(self, ioname, iovalue):
+    def start_timer(self, ioname, iovalue):
         if iovalue == 0:
-            self.timer.start()
+            self.now = 0
+            self.timer.start(1000)
+            self.update_timer()
             print("Timer startet!")
         else:
             self.timer.stop()
             print("Timer stopped!")
 
-    def updateScores(self, inputName, newTime):
+    def update_timer(self):
+        self.runTime = "%d:%02d" % (self.now / 60, self.now % 60)
+        self.lcdCounter.display(self.runTime)
+
+    def tick_timer(self):
+        self.now += 1
+        self.update_timer()
+
+    def update_scores(self, inputName, newTime):
         locale.setlocale(locale.LC_ALL, '')
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
         row = [inputName, newTime]
@@ -134,6 +142,11 @@ class Ui_MainWindow(object):
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
             writer.writerow(row)
+
+    def exit_function(self):
+        self.rpi.device.exit()
+        self.highscoreButton.show()
+        self.startButton.show()
 
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
@@ -144,6 +157,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
