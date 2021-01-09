@@ -57,7 +57,7 @@ class Ui_MainWindow(object):
         self.lcdCounter.setEnabled(False)
         self.lcdCounter.setFixedSize(301, 151)
         self.lcdCounter.setSmallDecimalPoint(False)
-        self.lcdCounter.setDigitCount(4)
+        self.lcdCounter.setDigitCount(5)
         self.lcdCounter.setObjectName("lcdCounter")
         self.lcdCounter.hide()
 
@@ -119,15 +119,16 @@ class Ui_MainWindow(object):
     def start_timer(self, ioname, iovalue):
         if iovalue == 0:
             self.now = 0
-            self.timer.start(1000)
             self.update_timer()
+            self.timer.timeout.connect(self.tick_timer)
+            self.timer.start(10)
             print("Timer startet!")
         else:
             self.timer.stop()
             print("Timer stopped!")
 
     def update_timer(self):
-        self.runTime = "%d:%02d" % (self.now / 60, self.now % 60)
+        self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
         self.lcdCounter.display(self.runTime)
 
     def tick_timer(self):
