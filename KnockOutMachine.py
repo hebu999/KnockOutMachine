@@ -13,10 +13,12 @@ import revpimodio2
 
 
 class Ui_MainWindow(object):
+    Input_I1 = 0
 
     def __init__(self):
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
+        self.rpi.io.I_1.reg_event(self.toogleInput)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
@@ -59,7 +61,9 @@ class Ui_MainWindow(object):
         self.lcdCounter.setSmallDecimalPoint(False)
         self.lcdCounter.setDigitCount(5)
         self.lcdCounter.setObjectName("lcdCounter")
+        self.lcdCounter.display("00.00")
         self.lcdCounter.hide()
+        self.runTime = ""
 
         self.boxLayout = QtWidgets.QHBoxLayout()
         self.boxLayout.setAlignment(QtCore.Qt.AlignBottom)
@@ -74,6 +78,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
+        self.objectPresent = False
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslate_ui(MainWindow)
@@ -102,11 +107,7 @@ class Ui_MainWindow(object):
         self.highscoreButton.hide()
         self.rpi.mainloop(blocking=False)
 
-        self.rpi.io.I_1.reg_event(self.start_timer)
-
-        # newTime = input("Bitte Zeit eingeben: ")
         # inputName = str(input("Bitte Namen eingeben: "))
-        # self.updateScores(inputName, newTime)
 
     # TODO show Highscore List on click
     def on_high_score_button_clicked(self):
@@ -116,16 +117,25 @@ class Ui_MainWindow(object):
         self.pictures.hide()
         return None
 
-    def start_timer(self, ioname, iovalue):
-        if iovalue == 0:
+    def start_timer(self):
+        if not Input_I1:
             self.now = 0
             self.update_timer()
             self.timer.timeout.connect(self.tick_timer)
             self.timer.start(10)
             print("Timer startet!")
-        else:
+            self.objectPresent = True
+        elif Input_I1 and self.objectPresent:
             self.timer.stop()
             print("Timer stopped!")
+            print("Die Zeit war: ", self.runTime)
+            # self.updateScores(inputName, newTime)
+            self.exit_function()
+
+    def toogleInput(self, ioname, iovalue):
+        global Input_I1
+        Input_I1 = iovalue
+        self.start_timer()
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
@@ -145,9 +155,11 @@ class Ui_MainWindow(object):
             writer.writerow(row)
 
     def exit_function(self):
-        self.rpi.device.exit()
+        self.rpi.exit(full=False)
+        self.objectPresent = False
         self.highscoreButton.show()
         self.startButton.show()
+        self.cancelButton.hide()
 
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
