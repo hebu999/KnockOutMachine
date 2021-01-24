@@ -10,15 +10,17 @@ import sys
 import csv
 import locale
 import revpimodio2
+import time
+
+Input_I1 = False
 
 
 class Ui_MainWindow(object):
-    Input_I1 = 0
 
     def __init__(self):
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(self.toogleInput)
+        self.rpi.io.I_1.reg_event(self.toogleInput, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
@@ -98,7 +100,6 @@ class Ui_MainWindow(object):
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
 
-    # TODO test Timer and reg_event
     def on_start_button_clicked(self):
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
@@ -106,6 +107,7 @@ class Ui_MainWindow(object):
         self.startButton.hide()
         self.highscoreButton.hide()
         self.rpi.mainloop(blocking=False)
+        self.start_timer()
 
         # inputName = str(input("Bitte Namen eingeben: "))
 
@@ -124,18 +126,24 @@ class Ui_MainWindow(object):
             self.timer.timeout.connect(self.tick_timer)
             self.timer.start(10)
             print("Timer startet!")
-            self.objectPresent = True
-        elif Input_I1 and self.objectPresent:
+            self.timer.timeout.connect(self.stop_timer)
+
+        elif Input_I1:
+            print("Bitte Glas vor den Sensor stellen!")
+            while Input_I1:
+                self.start_timer()
+
+    def stop_timer(self):
+        if Input_I1:
             self.timer.stop()
-            print("Timer stopped!")
             print("Die Zeit war: ", self.runTime)
-            # self.updateScores(inputName, newTime)
+            time.sleep(5)
             self.exit_function()
+            # self.updateScores(inputName, newTime)
 
     def toogleInput(self, ioname, iovalue):
         global Input_I1
         Input_I1 = iovalue
-        self.start_timer()
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
@@ -156,7 +164,8 @@ class Ui_MainWindow(object):
 
     def exit_function(self):
         self.rpi.exit(full=False)
-        self.objectPresent = False
+        self.timer.stop()
+        self.lcdCounter.hide()
         self.highscoreButton.show()
         self.startButton.show()
         self.cancelButton.hide()
