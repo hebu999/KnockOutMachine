@@ -11,6 +11,7 @@ import csv
 import locale
 import revpimodio2
 import time
+import threading
 
 Input_I1 = False
 
@@ -20,10 +21,12 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(self.toogleInput, prefire=True)
+        self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
+
+        self.event = threading.Event()
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -34,6 +37,14 @@ class Ui_MainWindow(object):
         self.pictures.setBackgroundBrush(brush)
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(900, 900)
+
+        self.model = QtGui.QStandardItemModel(self.centralwidget)
+
+        self.tableview = QtWidgets.QTableView(self.centralwidget)
+        self.tableview.setObjectName("tableView")
+        self.tableview.setFixedSize(900, 900)
+        self.tableview.setModel(self.model)
+        self.tableview.hide()
 
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
         self.startButton.setFixedSize(171, 51)
@@ -48,7 +59,7 @@ class Ui_MainWindow(object):
         self.highscoreButton.setFont(font)
         self.highscoreButton.setObjectName("highscoreButton")
         self.highscoreButton.setFixedSize(171, 51)
-        self.highscoreButton.clicked.connect(lambda: self.on_start_button_clicked())
+        self.highscoreButton.clicked.connect(lambda: self.on_high_score_button_clicked())
 
         self.cancelButton = QtWidgets.QPushButton(self.centralwidget)
         self.cancelButton.setFont(font)
@@ -107,41 +118,56 @@ class Ui_MainWindow(object):
         self.startButton.hide()
         self.highscoreButton.hide()
         self.rpi.mainloop(blocking=False)
+
+        self.event.wait(1)
         self.start_timer()
 
-        # inputName = str(input("Bitte Namen eingeben: "))
-
-    # TODO show Highscore List on click
     def on_high_score_button_clicked(self):
         print("Dies ist eine Bestenliste")
+        DELIMITER = ';'
         self.highscoreButton.hide()
         self.startButton.hide()
         self.pictures.hide()
-        return None
+        self.tableview.show()
+
+        with open('timeList.csv', 'r') as timeFile:
+            for row in csv.reader(timeFile, delimiter=DELIMITER):
+                times = [
+                    QtGui.QStandardItem(field)
+                    for field in row
+                ]
+                self.model.appendRow(times)
 
     def start_timer(self):
         if not Input_I1:
-            self.now = 0
-            self.update_timer()
-            self.timer.timeout.connect(self.tick_timer)
-            self.timer.start(10)
-            print("Timer startet!")
-            self.timer.timeout.connect(self.stop_timer)
+            print("Bitte Glas vor Sensor stellen!")
+            while not Input_I1:
+                self.event.wait(0.1)
 
-        elif Input_I1:
-            print("Bitte Glas vor den Sensor stellen!")
-            while Input_I1:
-                self.start_timer()
+        print("Bereit?")
+        while Input_I1:
+            self.event.wait(0.1)
+
+        self.now = 0
+        self.update_timer()
+        self.timer.timeout.connect(self.tick_timer)
+        self.timer.start(10)
+        self.timer.timeout.connect(self.stop_timer)
+        print("Timer startet!")
 
     def stop_timer(self):
         if Input_I1:
             self.timer.stop()
             print("Die Zeit war: ", self.runTime)
-            time.sleep(5)
-            self.exit_function()
-            # self.updateScores(inputName, newTime)
+            self.event.wait(5)
 
-    def toogleInput(self, ioname, iovalue):
+            # self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
+            #                                                               'Glückwunsch, bitte Namen eingeben:')
+            # if self.pressed and self.inputName != '':
+            #     self.update_scores(self.inputName, self.runTime)
+            self.exit_function()
+
+    def toggle_input(self, ioname, iovalue):
         global Input_I1
         Input_I1 = iovalue
 
