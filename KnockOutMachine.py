@@ -10,7 +10,6 @@ import sys
 import csv
 import locale
 import revpimodio2
-import time
 import threading
 
 Input_I1 = False
@@ -30,27 +29,29 @@ class Ui_MainWindow(object):
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        # TODO show different pictures depending on timer
-        self.pictures = QtWidgets.QGraphicsView(self.centralwidget)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
-        brush.setStyle(QtCore.Qt.NoBrush)
-        self.pictures.setBackgroundBrush(brush)
+
+        self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(900, 900)
+        self.pictures.setAlignment(QtCore.Qt.AlignCenter)
+        self.pixmap = QtGui.QPixmap(".jpg")
+        self.pictures.setPixmap(self.pixmap)
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
+        self.model.setHorizontalHeaderLabels(['Name', 'Zeit in Sekunden'])
+        self.model.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.Qt.AlignJustify, QtCore.Qt.TextAlignmentRole)
 
         self.tableview = QtWidgets.QTableView(self.centralwidget)
         self.tableview.setObjectName("tableView")
-        self.tableview.setFixedSize(900, 900)
+        self.tableview.setFixedSize(250, 250)
         self.tableview.setModel(self.model)
         self.tableview.hide()
 
-        self.startButton = QtWidgets.QPushButton(self.centralwidget)
-        self.startButton.setFixedSize(171, 51)
         font = QtGui.QFont()
         font.setBold(True)
-        font.setWeight(99)
+        font.setWeight(120)
+        self.startButton = QtWidgets.QPushButton(self.centralwidget)
+        self.startButton.setFixedSize(171, 51)
         self.startButton.setFont(font)
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
@@ -77,6 +78,8 @@ class Ui_MainWindow(object):
         self.lcdCounter.display("00.00")
         self.lcdCounter.hide()
         self.runTime = ""
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(100)
 
         self.boxLayout = QtWidgets.QHBoxLayout()
         self.boxLayout.setAlignment(QtCore.Qt.AlignBottom)
@@ -85,13 +88,10 @@ class Ui_MainWindow(object):
         self.boxLayout.addWidget(self.highscoreButton, alignment=QtCore.Qt.AlignHCenter)
         self.boxLayout.addWidget(self.cancelButton)
 
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(100)
         self.centralwidget.setLayout(self.boxLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
-        self.objectPresent = False
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslate_ui(MainWindow)
@@ -117,13 +117,14 @@ class Ui_MainWindow(object):
         self.cancelButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
+        self.pixmap = QtGui.QPixmap(".jpg")
+        self.pictures.setPixmap(self.pixmap)
         self.rpi.mainloop(blocking=False)
 
         self.event.wait(1)
         self.start_timer()
 
     def on_high_score_button_clicked(self):
-        print("Dies ist eine Bestenliste")
         DELIMITER = ';'
         self.highscoreButton.hide()
         self.startButton.hide()
@@ -139,6 +140,7 @@ class Ui_MainWindow(object):
                 self.model.appendRow(times)
 
     def start_timer(self):
+        # TODO show print messages in GUI
         if not Input_I1:
             print("Bitte Glas vor Sensor stellen!")
             while not Input_I1:
@@ -156,6 +158,7 @@ class Ui_MainWindow(object):
         print("Timer startet!")
 
     def stop_timer(self):
+        # TODO Highscore only if time is in top ten
         if Input_I1:
             self.timer.stop()
             print("Die Zeit war: ", self.runTime)
@@ -165,6 +168,7 @@ class Ui_MainWindow(object):
             #                                                               'Glückwunsch, bitte Namen eingeben:')
             # if self.pressed and self.inputName != '':
             #     self.update_scores(self.inputName, self.runTime)
+            self.show_pictures(self.now)
             self.exit_function()
 
     def toggle_input(self, ioname, iovalue):
@@ -179,14 +183,29 @@ class Ui_MainWindow(object):
         self.now += 1
         self.update_timer()
 
-    def update_scores(self, inputName, newTime):
+    def update_scores(self, inputName, runTime):
+        # TODO highscore limit of ten? needs to be clarified
         locale.setlocale(locale.LC_ALL, '')
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
-        row = [inputName, newTime]
+        row = [inputName, runTime]
 
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
             writer.writerow(row)
+
+    def show_pictures(self, runTime):
+        if runTime <= 100:
+            self.pixmap = QtGui.QPixmap(".jpg")
+            self.pictures.setPixmap(self.pixmap)
+        elif runTime <= 300:
+            self.pixmap = QtGui.QPixmap(".jpg")
+            self.pictures.setPixmap(self.pixmap)
+        elif runTime <= 600:
+            self.pixmap = QtGui.QPixmap(".jpg")
+            self.pictures.setPixmap(self.pixmap)
+        else:
+            self.pixmap = QtGui.QPixmap(".jpg")
+            self.pictures.setPixmap(self.pixmap)
 
     def exit_function(self):
         self.rpi.exit(full=False)
