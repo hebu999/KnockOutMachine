@@ -26,16 +26,28 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("KnockOutMachine")
 
         self.event = threading.Event()
+        self.thread = threading.Thread(target=self.toggle_input)
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
-        self.pictures.setFixedSize(900, 900)
+        self.pictures.setFixedSize(800, 800)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap(".jpg")
+        self.pixmap = QtGui.QPixmap("J:\Downloads\Test\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
+        self.movie = QtGui.QMovie("J:\Downloads\Test\dog.gif")
         self.pictures.setPixmap(self.pixmap)
+
+        palette = QtGui.QPalette()
+        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
+        mfont = QtGui.QFont("Times", 80, QtGui.QFont.Bold)
+        self.messages = QtWidgets.QLineEdit(self.centralwidget)
+        self.messages.setObjectName("messages")
+        self.messages.setPalette(palette)
+        self.messages.setFont(mfont)
+        self.messages.setAlignment(QtCore.Qt.AlignCenter)
+        self.messages.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
         self.model.setHorizontalHeaderLabels(['Name', 'Zeit in Sekunden'])
@@ -81,14 +93,21 @@ class Ui_MainWindow(object):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
 
-        self.boxLayout = QtWidgets.QHBoxLayout()
-        self.boxLayout.setAlignment(QtCore.Qt.AlignBottom)
-        self.boxLayout.addWidget(self.lcdCounter, alignment=QtCore.Qt.AlignHCenter)
-        self.boxLayout.addWidget(self.startButton, alignment=QtCore.Qt.AlignHCenter)
-        self.boxLayout.addWidget(self.highscoreButton, alignment=QtCore.Qt.AlignHCenter)
-        self.boxLayout.addWidget(self.cancelButton)
+        self.hboxPictures = QtWidgets.QHBoxLayout()
+        self.hboxPictures.addWidget(self.pictures)
+        self.hboxPictures.addWidget(self.messages)
 
-        self.centralwidget.setLayout(self.boxLayout)
+        self.hboxButtons = QtWidgets.QHBoxLayout()
+        self.hboxButtons.addWidget(self.lcdCounter)
+        self.hboxButtons.addWidget(self.startButton)
+        self.hboxButtons.addWidget(self.highscoreButton)
+        self.hboxButtons.addWidget(self.cancelButton)
+
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.vbox.addLayout(self.hboxPictures)
+        self.vbox.addLayout(self.hboxButtons)
+
+        self.centralwidget.setLayout(self.vbox)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -117,8 +136,8 @@ class Ui_MainWindow(object):
         self.cancelButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
-        self.pixmap = QtGui.QPixmap(".jpg")
-        self.pictures.setPixmap(self.pixmap)
+        self.pictures.setMovie(self.movie)
+        self.movie.start()
         self.rpi.mainloop(blocking=False)
 
         self.event.wait(1)
@@ -140,16 +159,19 @@ class Ui_MainWindow(object):
                 self.model.appendRow(times)
 
     def start_timer(self):
-        # TODO show print messages in GUI
+        self.messages.show()
+        self.event.clear()
+        self.thread.start()
+
         if not Input_I1:
-            print("Bitte Glas vor Sensor stellen!")
-            while not Input_I1:
-                self.event.wait(0.1)
+            self.messages.setText("Bitte Glas vor Sensor stellen!")
+            self.event.wait()
+            self.event.clear()
 
-        print("Bereit?")
-        while Input_I1:
-            self.event.wait(0.1)
+        self.messages.setText("Bereit?")
+        self.event.wait()
 
+        self.messages.hide()
         self.now = 0
         self.update_timer()
         self.timer.timeout.connect(self.tick_timer)
@@ -174,6 +196,7 @@ class Ui_MainWindow(object):
     def toggle_input(self, ioname, iovalue):
         global Input_I1
         Input_I1 = iovalue
+        self.event.set()
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
