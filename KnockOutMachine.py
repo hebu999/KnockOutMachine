@@ -26,7 +26,6 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("KnockOutMachine")
 
         self.event = threading.Event()
-        self.thread = threading.Thread(target=self.toggle_input)
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -92,6 +91,7 @@ class Ui_MainWindow(object):
         self.runTime = ""
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
+        self.timer.timeout.connect(self.tick_timer)
 
         self.hboxPictures = QtWidgets.QHBoxLayout()
         self.hboxPictures.addWidget(self.pictures)
@@ -144,6 +144,7 @@ class Ui_MainWindow(object):
         self.start_timer()
 
     def on_high_score_button_clicked(self):
+        # TODO show Highscore top 10 times, descending
         DELIMITER = ';'
         self.highscoreButton.hide()
         self.startButton.hide()
@@ -160,37 +161,36 @@ class Ui_MainWindow(object):
 
     def start_timer(self):
         self.messages.show()
-        self.event.clear()
+        # TODO terminate thread if no longer needed
+        self.thread = threading.Thread(target=self.toggle_input)
         self.thread.start()
+        self.event.clear()
 
         if not Input_I1:
             self.messages.setText("Bitte Glas vor Sensor stellen!")
             self.event.wait()
-            self.event.clear()
 
+        self.event.clear()
         self.messages.setText("Bereit?")
         self.event.wait()
 
         self.messages.hide()
         self.now = 0
         self.update_timer()
-        self.timer.timeout.connect(self.tick_timer)
         self.timer.start(10)
         self.timer.timeout.connect(self.stop_timer)
-        print("Timer startet!")
 
     def stop_timer(self):
-        # TODO Highscore only if time is in top ten
         if Input_I1:
             self.timer.stop()
             print("Die Zeit war: ", self.runTime)
-            self.event.wait(5)
-
-            # self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
-            #                                                               'Glückwunsch, bitte Namen eingeben:')
-            # if self.pressed and self.inputName != '':
-            #     self.update_scores(self.inputName, self.runTime)
             self.show_pictures(self.now)
+            self.event.wait(3)
+
+            self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
+                                                                          'Bitte Namen eingeben:')
+            if self.pressed and self.inputName != '':
+                self.update_scores(self.inputName, self.runTime)
             self.exit_function()
 
     def toggle_input(self, ioname, iovalue):
@@ -201,16 +201,17 @@ class Ui_MainWindow(object):
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
         self.lcdCounter.display(self.runTime)
+        if self.now / 100 == 99:
+            self.exit_function()
 
     def tick_timer(self):
         self.now += 1
         self.update_timer()
 
     def update_scores(self, inputName, runTime):
-        # TODO highscore limit of ten? needs to be clarified
         locale.setlocale(locale.LC_ALL, '')
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
-        row = [inputName, runTime]
+        row = [inputName, runTime.replace(".", ",")]
 
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
@@ -237,6 +238,7 @@ class Ui_MainWindow(object):
         self.highscoreButton.show()
         self.startButton.show()
         self.cancelButton.hide()
+        self.pictures.setPixmap(self.pixmap)
 
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
