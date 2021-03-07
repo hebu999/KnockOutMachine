@@ -6,7 +6,7 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import pyqtSignal
 import sys
 import csv
 import locale
@@ -17,6 +17,7 @@ Input_I1 = False
 
 
 class Ui_MainWindow(object):
+    input_changed = pyqtSignal(object)
 
     def __init__(self):
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
@@ -27,7 +28,6 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("KnockOutMachine")
 
         self.event = threading.Event()
-        self.uithread = QThread()
         
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -138,12 +138,10 @@ class Ui_MainWindow(object):
         self.cancelButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
-        self.pictures.setMovie(self.movie)
-        self.movie.start()
         self.rpi.mainloop(blocking=False)
 
-        self.event.wait(1)
-        self.start_timer()
+        self.pictures.hide()
+        self.ready_function()
 
     def on_high_score_button_clicked(self):
         # TODO show Highscore top 10 times in descending order, fix the table size
@@ -162,22 +160,23 @@ class Ui_MainWindow(object):
                 ]
                 self.model.appendRow(times)
 
-    def start_timer(self):
+    def ready_function(self):
         self.messages.show()
-        # TODO use QThread() instead, see https://realpython.com/python-pyqt-qthread/
-        self.thread = threading.Thread(target=self.toggle_input)
-        self.thread.start()
-        self.event.clear()
-
         if not Input_I1:
             self.messages.setText("Bitte Glas vor Sensor stellen!")
-            self.event.wait()
+        else:
+            self.messages.setText("Bereit?")
 
-        self.event.clear()
-        self.messages.setText("Bereit?")
-        self.event.wait()
+        print("Input_I1: ", Input_I1)
 
+        self.movie.start()
+        # self.start_timer()
+
+    def start_timer(self):
         self.messages.hide()
+        self.pictures.show()
+        self.pictures.setMovie(self.movie)
+
         self.now = 0
         self.update_timer()
         self.timer.start(10)
@@ -199,7 +198,8 @@ class Ui_MainWindow(object):
     def toggle_input(self, ioname, iovalue):
         global Input_I1
         Input_I1 = iovalue
-        self.event.set()
+        self.input_changed.emit(Input_I1)
+        # self.event.set()
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
