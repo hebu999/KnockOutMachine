@@ -6,28 +6,23 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import pyqtSignal
 import sys
 import csv
 import locale
 import revpimodio2
-import threading
 
 Input_I1 = False
 
 
 class Ui_MainWindow(object):
-    input_changed = pyqtSignal(object)
 
-    def __init__(self):
-        self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
-        self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
+    # def __init__(self):
+    #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
+    #     self.rpi.handlesignalend(self.cleanup_revpi)
+    #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
-
-        self.event = threading.Event()
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -73,7 +68,7 @@ class Ui_MainWindow(object):
         self.toggleButton.setFixedSize(171, 51)
         self.toggleButton.setFont(font)
         self.toggleButton.setObjectName("toggleButton")
-        self.toggleButton.clicked.connect(lambda: self.worker.toggle_input())
+        self.toggleButton.clicked.connect(lambda: self.toggle_input())
         self.toggleButton.hide()
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
@@ -98,14 +93,19 @@ class Ui_MainWindow(object):
         self.lcdCounter.display("00.00")
         self.lcdCounter.hide()
         self.runTime = ""
-        self.timer = QtCore.QTimer()
+
+        self.timer, self.glas_not_set_timer, self.glas_set_timer = QtCore.QTimer(), QtCore.QTimer(), QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.tick_timer)
+        self.timer.timeout.connect(self.stop_timer)
 
-        self.readyTimer = QtCore.QTimer()
-        self.readyTimer.setSingleShot(True)
-        self.readyTimer.setInterval(100)
-        self.readyTimer.timeout.connect(self.ready_function)
+        self.glas_set_timer.setSingleShot(True)
+        self.glas_set_timer.setInterval(100)
+        self.glas_set_timer.timeout.connect(self.glas_set)
+
+        self.glas_not_set_timer.setSingleShot(True)
+        self.glas_not_set_timer.setInterval(100)
+        self.glas_not_set_timer.timeout.connect(self.glas_not_set)
 
         self.hboxPictures = QtWidgets.QHBoxLayout()
         self.hboxPictures.addWidget(self.pictures)
@@ -148,6 +148,7 @@ class Ui_MainWindow(object):
         self.lcdCounter.setStyleSheet("background-color: white;")
 
     def on_start_button_clicked(self):
+        self.lcdCounter.display("00.00")
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
@@ -156,7 +157,10 @@ class Ui_MainWindow(object):
         self.highscoreButton.hide()
         self.pictures.hide()
 
-        self.ready_function()
+        if not Input_I1:
+            self.glas_not_set()
+        else:
+            self.glas_set()
 
     def on_high_score_button_clicked(self):
         # TODO show Highscore top 10 times in descending order, fix the table size
@@ -175,17 +179,22 @@ class Ui_MainWindow(object):
                 ]
                 self.model.appendRow(times)
 
-    def ready_function(self):
+    def glas_not_set(self):
+        self.glas_not_set_timer.start()
         self.messages.show()
+        self.messages.setText("Bitte Glas vor Sensor stellen!")
+        if Input_I1:
+            self.glas_not_set_timer.stop()
+            self.glas_set()
+
+    def glas_set(self):
+        self.glas_set_timer.start()
+        self.messages.show()
+        self.messages.setText("Bereit?")
         if not Input_I1:
-            self.messages.setText("Bitte Glas vor Sensor stellen!")
-        else:
-            self.messages.setText("Bereit?")
-
-        print("Input_I1: ", Input_I1)
-
-        self.movie.start()
-        # self.start_timer()
+            self.glas_set_timer.stop()
+            self.movie.start()
+            self.start_timer()
 
     def start_timer(self):
         self.messages.hide()
@@ -195,11 +204,12 @@ class Ui_MainWindow(object):
         self.now = 0
         self.update_timer()
         self.timer.start(10)
-        self.timer.timeout.connect(self.stop_timer)
 
     def stop_timer(self):
         if Input_I1:
             self.timer.stop()
+
+        if not self.timer.isActive():
             print("Die Zeit war: ", self.runTime)
             self.show_pictures(self.now)
 
@@ -209,11 +219,9 @@ class Ui_MainWindow(object):
                 self.update_scores(self.inputName, self.runTime)
             self.exit_function()
 
-    def toggle_input(self, ioname, iovalue):
+    def toggle_input(self):
         global Input_I1
-        Input_I1 = iovalue
-        self.input_changed.emit(Input_I1)
-        # self.event.set()
+        Input_I1 = not Input_I1
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
@@ -251,7 +259,8 @@ class Ui_MainWindow(object):
     def exit_function(self):
         # self.rpi.exit(full=False)
         self.timer.stop()
-        self.readyTimer.stop()
+        self.glas_set_timer.stop()
+        self.glas_not_set_timer.stop()
         self.lcdCounter.hide()
         self.tableview.hide()
         self.toggleButton.hide()
