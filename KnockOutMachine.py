@@ -6,44 +6,28 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtCore import pyqtSignal
 import sys
 import csv
 import locale
 import revpimodio2
+import threading
 
 Input_I1 = False
 
 
-class Worker(QObject):
-    # def __init__(self):
-    #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
-    #     self.rpi.handlesignalend(self.cleanup_revpi)
-    #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
-    finished = pyqtSignal()
-    input = pyqtSignal(bool)
-
-    # self.rpi.mainloop(blocking=False)
-
-    def toggle_input(self):
-        global Input_I1
-        Input_I1 = not Input_I1
-        self.input.emit(Input_I1)
-        self.finished.emit()
-
-
 class Ui_MainWindow(object):
+    input_changed = pyqtSignal(object)
 
     def __init__(self):
-        self.worker = Worker()
-        self.thread = QThread()
-        self.worker.moveToThread(self.thread)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.start()
+        self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
+        self.rpi.handlesignalend(self.cleanup_revpi)
+        self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
+
+        self.event = threading.Event()
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -193,7 +177,6 @@ class Ui_MainWindow(object):
 
     def ready_function(self):
         self.messages.show()
-        self.readyTimer.start()
         if not Input_I1:
             self.messages.setText("Bitte Glas vor Sensor stellen!")
         else:
@@ -202,7 +185,6 @@ class Ui_MainWindow(object):
         print("Input_I1: ", Input_I1)
 
         self.movie.start()
-        # self.readyTimer.stop()
         # self.start_timer()
 
     def start_timer(self):
@@ -226,6 +208,12 @@ class Ui_MainWindow(object):
             if self.pressed and self.inputName != '':
                 self.update_scores(self.inputName, self.runTime)
             self.exit_function()
+
+    def toggle_input(self, ioname, iovalue):
+        global Input_I1
+        Input_I1 = iovalue
+        self.input_changed.emit(Input_I1)
+        # self.event.set()
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
