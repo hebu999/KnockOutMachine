@@ -16,10 +16,10 @@ Input_I1 = False
 
 class Ui_MainWindow(object):
 
-    # def __init__(self):
-    #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
-    #     self.rpi.handlesignalend(self.cleanup_revpi)
-    #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
+    def __init__(self):
+        self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
+        self.rpi.handlesignalend(self.cleanup_revpi)
+        self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
@@ -64,13 +64,6 @@ class Ui_MainWindow(object):
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
-        self.toggleButton = QtWidgets.QPushButton(self.centralwidget)
-        self.toggleButton.setFixedSize(171, 51)
-        self.toggleButton.setFont(font)
-        self.toggleButton.setObjectName("toggleButton")
-        self.toggleButton.clicked.connect(lambda: self.toggle_input())
-        self.toggleButton.hide()
-
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
         self.highscoreButton.setFont(font)
         self.highscoreButton.setObjectName("highscoreButton")
@@ -114,7 +107,6 @@ class Ui_MainWindow(object):
         self.hboxButtons = QtWidgets.QHBoxLayout()
         self.hboxButtons.addWidget(self.lcdCounter)
         self.hboxButtons.addWidget(self.startButton)
-        self.hboxButtons.addWidget(self.toggleButton)
         self.hboxButtons.addWidget(self.highscoreButton)
         self.hboxButtons.addWidget(self.cancelButton)
 
@@ -139,8 +131,6 @@ class Ui_MainWindow(object):
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
-        self.toggleButton.setText(_translate("KnockOutMachine", "Toggle Input"))
-        self.toggleButton.setStyleSheet("background-color: white;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
         self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
@@ -152,10 +142,10 @@ class Ui_MainWindow(object):
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
-        self.toggleButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
         self.pictures.hide()
+        self.rpi.mainloop(blocking=False)
 
         if not Input_I1:
             self.glas_not_set()
@@ -257,13 +247,12 @@ class Ui_MainWindow(object):
             self.pictures.setPixmap(self.pixmap)
 
     def exit_function(self):
-        # self.rpi.exit(full=False)
+        self.rpi.exit(full=False)
         self.timer.stop()
         self.glas_set_timer.stop()
         self.glas_not_set_timer.stop()
         self.lcdCounter.hide()
         self.tableview.hide()
-        self.toggleButton.hide()
         self.cancelButton.hide()
         self.messages.hide()
         self.highscoreButton.show()
