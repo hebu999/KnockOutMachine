@@ -6,35 +6,51 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 import sys
 import csv
 import locale
 import revpimodio2
-import threading
 
 Input_I1 = False
+
+
+class Worker(QObject):
+    # def __init__(self):
+    #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
+    #     self.rpi.handlesignalend(self.cleanup_revpi)
+    #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
+    finished = pyqtSignal()
+    input = pyqtSignal(bool)
+
+    # self.rpi.mainloop(blocking=False)
+
+    def toggle_input(self):
+        global Input_I1
+        Input_I1 = not Input_I1
+        self.input.emit(Input_I1)
+        self.finished.emit()
 
 
 class Ui_MainWindow(object):
 
     def __init__(self):
-        self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
-        self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
+        self.worker = Worker()
+        self.thread = QThread()
+        self.worker.moveToThread(self.thread)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.start()
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
 
-        self.event = threading.Event()
-        self.uithread = QThread()
-        
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
-        self.pictures.setFixedSize(200, 200)
+        self.pictures.setFixedSize(800, 800)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
         self.pixmap = QtGui.QPixmap("J:\Downloads\Test\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
         self.movie = QtGui.QMovie("J:\Downloads\Test\dog.gif")
@@ -69,6 +85,13 @@ class Ui_MainWindow(object):
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
+        self.toggleButton = QtWidgets.QPushButton(self.centralwidget)
+        self.toggleButton.setFixedSize(171, 51)
+        self.toggleButton.setFont(font)
+        self.toggleButton.setObjectName("toggleButton")
+        self.toggleButton.clicked.connect(lambda: self.worker.toggle_input())
+        self.toggleButton.hide()
+
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
         self.highscoreButton.setFont(font)
         self.highscoreButton.setObjectName("highscoreButton")
@@ -95,6 +118,11 @@ class Ui_MainWindow(object):
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.tick_timer)
 
+        self.readyTimer = QtCore.QTimer()
+        self.readyTimer.setSingleShot(True)
+        self.readyTimer.setInterval(100)
+        self.readyTimer.timeout.connect(self.ready_function)
+
         self.hboxPictures = QtWidgets.QHBoxLayout()
         self.hboxPictures.addWidget(self.pictures)
         self.hboxPictures.addWidget(self.messages)
@@ -102,6 +130,7 @@ class Ui_MainWindow(object):
         self.hboxButtons = QtWidgets.QHBoxLayout()
         self.hboxButtons.addWidget(self.lcdCounter)
         self.hboxButtons.addWidget(self.startButton)
+        self.hboxButtons.addWidget(self.toggleButton)
         self.hboxButtons.addWidget(self.highscoreButton)
         self.hboxButtons.addWidget(self.cancelButton)
 
@@ -126,6 +155,8 @@ class Ui_MainWindow(object):
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
+        self.toggleButton.setText(_translate("KnockOutMachine", "Toggle Input"))
+        self.toggleButton.setStyleSheet("background-color: white;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
         self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
@@ -136,14 +167,12 @@ class Ui_MainWindow(object):
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
+        self.toggleButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
-        self.pictures.setMovie(self.movie)
-        self.movie.start()
-        self.rpi.mainloop(blocking=False)
+        self.pictures.hide()
 
-        self.event.wait(1)
-        self.start_timer()
+        self.ready_function()
 
     def on_high_score_button_clicked(self):
         # TODO show Highscore top 10 times in descending order, fix the table size
@@ -162,22 +191,25 @@ class Ui_MainWindow(object):
                 ]
                 self.model.appendRow(times)
 
-    def start_timer(self):
+    def ready_function(self):
         self.messages.show()
-        # TODO use QThread() instead, see https://realpython.com/python-pyqt-qthread/
-        self.thread = threading.Thread(target=self.toggle_input)
-        self.thread.start()
-        self.event.clear()
-
+        self.readyTimer.start()
         if not Input_I1:
             self.messages.setText("Bitte Glas vor Sensor stellen!")
-            self.event.wait()
+        else:
+            self.messages.setText("Bereit?")
 
-        self.event.clear()
-        self.messages.setText("Bereit?")
-        self.event.wait()
+        print("Input_I1: ", Input_I1)
 
+        self.movie.start()
+        # self.readyTimer.stop()
+        # self.start_timer()
+
+    def start_timer(self):
         self.messages.hide()
+        self.pictures.show()
+        self.pictures.setMovie(self.movie)
+
         self.now = 0
         self.update_timer()
         self.timer.start(10)
@@ -188,18 +220,12 @@ class Ui_MainWindow(object):
             self.timer.stop()
             print("Die Zeit war: ", self.runTime)
             self.show_pictures(self.now)
-            self.event.wait(3)
 
             self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
                                                                           'Bitte Namen eingeben:')
             if self.pressed and self.inputName != '':
                 self.update_scores(self.inputName, self.runTime)
             self.exit_function()
-
-    def toggle_input(self, ioname, iovalue):
-        global Input_I1
-        Input_I1 = iovalue
-        self.event.set()
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
@@ -235,13 +261,19 @@ class Ui_MainWindow(object):
             self.pictures.setPixmap(self.pixmap)
 
     def exit_function(self):
-        self.rpi.exit(full=False)
+        # self.rpi.exit(full=False)
         self.timer.stop()
+        self.readyTimer.stop()
         self.lcdCounter.hide()
         self.tableview.hide()
+        self.toggleButton.hide()
+        self.cancelButton.hide()
+        self.messages.hide()
         self.highscoreButton.show()
         self.startButton.show()
-        self.cancelButton.hide()
+        self.pictures.show()
+
+        self.pixmap = QtGui.QPixmap("J:\Downloads\Test\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
         self.pictures.setPixmap(self.pixmap)
 
     # TODO add cleanup if necessary
