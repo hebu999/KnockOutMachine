@@ -6,6 +6,7 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QThread
 import sys
 import csv
 import locale
@@ -26,13 +27,14 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("KnockOutMachine")
 
         self.event = threading.Event()
-
+        self.uithread = QThread()
+        
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
-        self.pictures.setFixedSize(800, 800)
+        self.pictures.setFixedSize(200, 200)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
         self.pixmap = QtGui.QPixmap("J:\Downloads\Test\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
         self.movie = QtGui.QMovie("J:\Downloads\Test\dog.gif")
@@ -144,11 +146,12 @@ class Ui_MainWindow(object):
         self.start_timer()
 
     def on_high_score_button_clicked(self):
-        # TODO show Highscore top 10 times, descending
+        # TODO show Highscore top 10 times in descending order, fix the table size
         DELIMITER = ';'
         self.highscoreButton.hide()
         self.startButton.hide()
         self.pictures.hide()
+        self.cancelButton.show()
         self.tableview.show()
 
         with open('timeList.csv', 'r') as timeFile:
@@ -161,7 +164,7 @@ class Ui_MainWindow(object):
 
     def start_timer(self):
         self.messages.show()
-        # TODO terminate thread if no longer needed
+        # TODO use QThread() instead, see https://realpython.com/python-pyqt-qthread/
         self.thread = threading.Thread(target=self.toggle_input)
         self.thread.start()
         self.event.clear()
@@ -235,6 +238,7 @@ class Ui_MainWindow(object):
         self.rpi.exit(full=False)
         self.timer.stop()
         self.lcdCounter.hide()
+        self.tableview.hide()
         self.highscoreButton.show()
         self.startButton.show()
         self.cancelButton.hide()
