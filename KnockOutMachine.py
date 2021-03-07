@@ -209,9 +209,9 @@ class Ui_MainWindow(object):
                 self.update_scores(self.inputName, self.runTime)
             self.exit_function()
 
-    def toggle_input(self):
+    def toggle_input(self, ioname, iovalue):
         global Input_I1
-        Input_I1 = not Input_I1
+        Input_I1 = iovalue
 
     def update_timer(self):
         self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
