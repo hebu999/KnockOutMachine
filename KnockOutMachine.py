@@ -11,7 +11,7 @@ import csv
 import locale
 import revpimodio2
 
-Input_I1 = False
+Input_I1 = True
 
 
 class Ui_MainWindow(object):
@@ -31,8 +31,8 @@ class Ui_MainWindow(object):
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(800, 800)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("J:\Downloads\Test\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
-        self.movie = QtGui.QMovie("J:\Downloads\Test\dog.gif")
+        self.pixmap = QtGui.QPixmap("display\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
+        self.movie = QtGui.QMovie("display\dog.gif")
         self.pictures.setPixmap(self.pixmap)
 
         palette = QtGui.QPalette()
@@ -46,12 +46,14 @@ class Ui_MainWindow(object):
         self.messages.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
-        self.model.setHorizontalHeaderLabels(['Name', 'Zeit in Sekunden'])
-        self.model.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.Qt.AlignJustify, QtCore.Qt.TextAlignmentRole)
 
+        tableFont = QtGui.QFont("Times", 16)
         self.tableview = QtWidgets.QTableView(self.centralwidget)
         self.tableview.setObjectName("tableView")
-        self.tableview.setFixedSize(250, 250)
+        self.tableview.setFixedSize(480, 900)
+        self.tableview.verticalHeader().setDefaultSectionSize(85)
+        self.tableview.horizontalHeader().setDefaultSectionSize(200)
+        self.tableview.setFont(tableFont)
         self.tableview.setModel(self.model)
         self.tableview.hide()
 
@@ -110,6 +112,7 @@ class Ui_MainWindow(object):
         self.hboxPictures = QtWidgets.QHBoxLayout()
         self.hboxPictures.addWidget(self.pictures)
         self.hboxPictures.addWidget(self.messages)
+        self.hboxPictures.addWidget(self.tableview)
 
         self.hboxButtons = QtWidgets.QHBoxLayout()
         self.hboxButtons.addWidget(self.lcdCounter)
@@ -146,6 +149,7 @@ class Ui_MainWindow(object):
         self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
+        self.tableview.setStyleSheet("background-color: white;")
 
     def on_start_button_clicked(self):
         self.lcdCounter.display("00.00")
@@ -163,16 +167,23 @@ class Ui_MainWindow(object):
             self.glas_set()
 
     def on_high_score_button_clicked(self):
-        # TODO show Highscore top 10 times in descending order, fix the table size
-        DELIMITER = ';'
         self.highscoreButton.hide()
         self.startButton.hide()
         self.pictures.hide()
         self.cancelButton.show()
         self.tableview.show()
+        self.model.clear()
+        self.model.setHorizontalHeaderLabels(['Name', 'Zeit in Sekunden'])
+        self.model.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.Qt.AlignJustify, QtCore.Qt.TextAlignmentRole)
+
+        locale.setlocale(locale.LC_ALL, '')
+        DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
 
         with open('timeList.csv', 'r') as timeFile:
-            for row in csv.reader(timeFile, delimiter=DELIMITER):
+            reader = csv.reader(timeFile, delimiter=DELIMITER)
+            high_scores = sorted(reader, key=lambda row: row[1])[-10:]
+
+            for row in high_scores:
                 times = [
                     QtGui.QStandardItem(field)
                     for field in row
@@ -210,7 +221,6 @@ class Ui_MainWindow(object):
             self.timer.stop()
 
         if not self.timer.isActive():
-            print("Die Zeit war: ", self.runTime)
             self.show_pictures(self.now)
 
             self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
@@ -247,7 +257,7 @@ class Ui_MainWindow(object):
             self.pixmap = QtGui.QPixmap(".jpg")
             self.pictures.setPixmap(self.pixmap)
         elif runTime <= 300:
-            self.pixmap = QtGui.QPixmap(".jpg")
+            self.pixmap = QtGui.QPixmap("\display\aulbur.webp")
             self.pictures.setPixmap(self.pixmap)
         elif runTime <= 600:
             self.pixmap = QtGui.QPixmap(".jpg")
@@ -270,7 +280,7 @@ class Ui_MainWindow(object):
         self.startButton.show()
         self.pictures.show()
 
-        self.pixmap = QtGui.QPixmap("J:\Downloads\Test\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
+        self.pixmap = QtGui.QPixmap("display\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
         self.pictures.setPixmap(self.pixmap)
 
     # TODO add cleanup if necessary
