@@ -131,6 +131,8 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        locale.setlocale(locale.LC_ALL, '')
+
         self.retranslate_ui(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -176,16 +178,16 @@ class Ui_MainWindow(object):
         self.model.setHorizontalHeaderLabels(['Name', 'Zeit in Sekunden'])
         self.model.setHeaderData(0, QtCore.Qt.Horizontal, QtCore.Qt.AlignJustify, QtCore.Qt.TextAlignmentRole)
 
-        locale.setlocale(locale.LC_ALL, '')
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
 
         with open('timeList.csv', 'r') as timeFile:
             reader = csv.reader(timeFile, delimiter=DELIMITER)
-            high_scores = sorted(reader, key=lambda row: row[1])[-10:]
+            reader = [[x.replace(',', '.') for x in l] for l in reader]
+            highscore_list_sorted = sorted(reader, key=lambda x: float(x[1]))[:10]
 
-            for row in high_scores:
+            for row in highscore_list_sorted:
                 times = [
-                    QtGui.QStandardItem(field)
+                    QtGui.QStandardItem(field.replace(".", ","))
                     for field in row
                 ]
                 self.model.appendRow(times)
@@ -244,7 +246,6 @@ class Ui_MainWindow(object):
         self.update_timer()
 
     def update_scores(self, inputName, runTime):
-        locale.setlocale(locale.LC_ALL, '')
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
         row = [inputName, runTime.replace(".", ",")]
 
@@ -257,8 +258,9 @@ class Ui_MainWindow(object):
             self.pixmap = QtGui.QPixmap(".jpg")
             self.pictures.setPixmap(self.pixmap)
         elif runTime <= 300:
-            self.pixmap = QtGui.QPixmap("\display\aulbur.webp")
-            self.pictures.setPixmap(self.pixmap)
+            self.movie = QtGui.QMovie("display\trump.mp4")
+            self.pictures.setMovie(self.movie)
+            self.movie.start()
         elif runTime <= 600:
             self.pixmap = QtGui.QPixmap(".jpg")
             self.pictures.setPixmap(self.pixmap)
