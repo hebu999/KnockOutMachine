@@ -5,7 +5,7 @@
 
 __author__ = "Heiner Buescher"
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
 import sys
 import csv
 import locale
@@ -32,8 +32,8 @@ class Ui_MainWindow(object):
         self.pictures.setFixedSize(800, 800)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
         self.pixmap = QtGui.QPixmap("display\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
-        self.movie = QtGui.QMovie("display\dog.gif")
         self.pictures.setPixmap(self.pixmap)
+        self.player = QtMultimedia.QMediaPlayer()
 
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
@@ -145,6 +145,7 @@ class Ui_MainWindow(object):
 
     def on_start_button_clicked(self):
         self.lcdCounter.display("00.00")
+        self.movie = QtGui.QMovie("display\Bier.webp")
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
@@ -243,26 +244,41 @@ class Ui_MainWindow(object):
             writer = csv.writer(timeFile, delimiter=DELIMITER)
             writer.writerow(row)
 
+    def play_sound(self, fileName):
+        self.filename = "sounds\\" + fileName
+        self.url = QtCore.QUrl.fromLocalFile(self.filename)
+        self.content = QtMultimedia.QMediaContent(self.url)
+        self.player.setMedia(self.content)
+        self.player.play()
+
     def show_pictures(self, runTime):
         if runTime <= 100:
-            self.pixmap = QtGui.QPixmap(".jpg")
-            self.pictures.setPixmap(self.pixmap)
-        elif runTime <= 300:
-            self.movie = QtGui.QMovie("display\trump.mp4")
-            self.pictures.setMovie(self.movie)
+            self.movie = QtGui.QMovie("display\Trump.gif")
             self.movie.start()
+            self.pictures.setMovie(self.movie)
+            self.play_sound("")
+        elif runTime <= 300:
+            self.movie = QtGui.QMovie("display\Aulbur.webp")
+            self.movie.start()
+            self.pictures.setMovie(self.movie)
+            self.play_sound("")
         elif runTime <= 600:
-            self.pixmap = QtGui.QPixmap(".jpg")
-            self.pictures.setPixmap(self.pixmap)
+            self.movie = QtGui.QMovie("display\Bier2.gif")
+            self.movie.start()
+            self.pictures.setMovie(self.movie)
+            self.play_sound("")
         else:
-            self.pixmap = QtGui.QPixmap(".jpg")
-            self.pictures.setPixmap(self.pixmap)
+            self.movie = QtGui.QMovie("display\dog.gif")
+            self.movie.start()
+            self.pictures.setMovie(self.movie)
+            self.play_sound("")
 
     def exit_function(self):
         self.rpi.exit(full=False)
         self.timer.stop()
         self.glas_set_timer.stop()
         self.glas_not_set_timer.stop()
+        self.player.stop()
         self.lcdCounter.hide()
         self.tableview.hide()
         self.cancelButton.hide()
