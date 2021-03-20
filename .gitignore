@@ -5,3 +5,5 @@
 /workspace.xml
 *.csv
 *.ui
+*.exe
+*.spec
