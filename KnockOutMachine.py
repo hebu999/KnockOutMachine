@@ -6,6 +6,7 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
+from random import randint
 import sys
 import csv
 import locale
@@ -31,7 +32,7 @@ class Ui_MainWindow(object):
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(800, 800)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("display\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
+        self.pixmap = QtGui.QPixmap("display\\Logo-Button-Schuetzenverein.jpg")
         self.pictures.setPixmap(self.pixmap)
         self.player = QtMultimedia.QMediaPlayer()
 
@@ -140,7 +141,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("KnockOutMachine", "KnockOutMachine"))
         MainWindow.showMaximized()
-        MainWindow.setStyleSheet("background-color: #006400;")
+        MainWindow.setStyleSheet("background-color: #113f0c;")
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
@@ -262,28 +263,52 @@ class Ui_MainWindow(object):
         self.player.play()
 
     def show_pictures(self, runTime):
-        if runTime <= 100:
-            self.movie = QtGui.QMovie("display\Trump.gif")
+        if runTime <= 200:
+            self.rand = randint(0, 2)
+            self.case = lambda x: self.rand < x
+            if self.case(1):
+                self.movie = QtGui.QMovie("display\\Trump.gif")
+            else:
+                self.movie = QtGui.QMovie("display\\dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("")
+            self.play_sound("example.mp3")
 
-        elif runTime <= 300:
-            self.movie = QtGui.QMovie("display\Aulbur.webp")
+        elif runTime <= 500:
+            self.rand = randint(0, 6)
+            self.case = lambda x: self.rand < x
+            if self.case(1):
+                self.movie = QtGui.QMovie("display\\1.webp")
+            elif self.case(2):
+                self.movie = QtGui.QMovie("display\\2.gif")
+            elif self.case(3):
+                self.movie = QtGui.QMovie("display\\3.gif")
+            elif self.case(4):
+                self.movie = QtGui.QMovie("display\\4.gif")
+            elif self.case(5):
+                self.movie = QtGui.QMovie("display\\5.gif")
+            else:
+                self.movie = QtGui.QMovie("display\\6.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("")
+            self.play_sound("example.mp3")
 
-        elif runTime <= 600:
-            self.movie = QtGui.QMovie("display\Bier2.gif")
+        elif runTime <= 800:
+            self.rand = randint(0, 2)
+            self.case = lambda x: self.rand < x
+            if self.case(1):
+                self.movie = QtGui.QMovie("display\\Bier2.gif")
+            else:
+                self.movie = QtGui.QMovie("display\\1.webp")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("")
+            self.play_sound("example.mp3")
+
         else:
-            self.movie = QtGui.QMovie("display\dog.gif")
+            self.movie = QtGui.QMovie("display\\dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("")
+            self.play_sound("example.mp3")
 
     def exit_function(self):
         # self.rpi.exit(full=False)
@@ -300,7 +325,7 @@ class Ui_MainWindow(object):
         self.startButton.show()
         self.pictures.show()
 
-        self.pixmap = QtGui.QPixmap("display\Logo-Button-Schuetzenverein_ohne-Rand.jpg")
+        self.pixmap = QtGui.QPixmap("display\\Logo-Button-Schuetzenverein.jpg")
         self.pictures.setPixmap(self.pixmap)
 
     # TODO add cleanup if necessary
