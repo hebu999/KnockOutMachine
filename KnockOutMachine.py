@@ -182,17 +182,20 @@ class Ui_MainWindow(object):
 
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
 
-        with open('timeList.csv', 'r') as timeFile:
-            reader = csv.reader(timeFile, delimiter=DELIMITER)
-            reader = [[x.replace(',', '.') for x in l] for l in reader]
-            highscore_list_sorted = sorted(reader, key=lambda x: float(x[1]))[:10]
+        try:
+            with open('timeList.csv', 'r') as timeFile:
+                reader = csv.reader(timeFile, delimiter=DELIMITER)
+                reader = [[x.replace(',', '.') for x in l] for l in reader]
+                highscore_list_sorted = sorted(reader, key=lambda x: float(x[1]))[:10]
 
-            for row in highscore_list_sorted:
-                times = [
-                    QtGui.QStandardItem(field.replace(".", ","))
-                    for field in row
-                ]
-                self.model.appendRow(times)
+                for row in highscore_list_sorted:
+                    times = [
+                        QtGui.QStandardItem(field.replace(".", ","))
+                        for field in row
+                    ]
+                    self.model.appendRow(times)
+        except FileNotFoundError:
+            print("Timelist File does not exist")
 
     def glas_not_set(self):
         self.glas_not_set_timer.start()
