@@ -1,7 +1,5 @@
 /venv/
 /shelf/
-/display
-/sounds
 /workspace.xml
 *.csv
 *.ui
