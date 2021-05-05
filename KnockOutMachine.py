@@ -132,7 +132,7 @@ class Ui_MainWindow(object):
     def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("KnockOutMachine", "KnockOutMachine"))
-        MainWindow.showMaximized()
+        MainWindow.showFullScreen()
         MainWindow.setStyleSheet("background-color: #113f0c;")
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
@@ -216,7 +216,6 @@ class Ui_MainWindow(object):
 
         if not self.timer.isActive():
             self.show_pictures(self.now)
-
             self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
                                                                           'Bitte Namen eingeben:')
             if self.pressed and self.inputName != '':
@@ -262,7 +261,7 @@ class Ui_MainWindow(object):
                 self.movie = QtGui.QMovie("display\\dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("example.mp3")
+            self.play_sound("laughter-2.mp3")
         elif runTime <= 500:
             self.rand = randint(0, 6)
             self.case = lambda x: self.rand < x
@@ -280,7 +279,7 @@ class Ui_MainWindow(object):
                 self.movie = QtGui.QMovie("display\\6.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("example.mp3")
+            self.play_sound("applause-8.mp3")
         elif runTime <= 800:
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
@@ -290,13 +289,13 @@ class Ui_MainWindow(object):
                 self.movie = QtGui.QMovie("display\\1.webp")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("example.mp3")
+            self.play_sound("laughter-2.mp3")
 
         else:
             self.movie = QtGui.QMovie("display\\dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("example.mp3")
+            self.play_sound("applause-2.mp3")
 
     def exit_function(self):
         self.rpi.exit(full=False)
