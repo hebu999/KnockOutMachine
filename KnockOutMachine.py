@@ -32,12 +32,12 @@ class Ui_MainWindow(object):
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(800, 800)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("display\\Logo-Button-Schuetzenverein.jpg")
+        self.pixmap = QtGui.QPixmap("display/Logo-Button-Schuetzenverein.jpg")
         self.pictures.setPixmap(self.pixmap)
         self.player = QtMultimedia.QMediaPlayer()
 
         palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
+        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.black)
         mfont = QtGui.QFont("Times", 80, QtGui.QFont.Bold)
         self.messages = QtWidgets.QLineEdit(self.centralwidget)
         self.messages.setObjectName("messages")
@@ -133,7 +133,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("KnockOutMachine", "KnockOutMachine"))
         MainWindow.showFullScreen()
-        MainWindow.setStyleSheet("background-color: #113f0c;")
+        MainWindow.setStyleSheet("background-color: white;")
+        # MainWindow.setStyleSheet("background-color: #113f0c;")
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
@@ -146,7 +147,7 @@ class Ui_MainWindow(object):
 
     def on_start_button_clicked(self):
         self.lcdCounter.display("00.00")
-        self.movie = QtGui.QMovie("display\Bier.webp")
+        self.movie = QtGui.QMovie("display/dog.gif")
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
@@ -172,17 +173,21 @@ class Ui_MainWindow(object):
 
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
 
-        with open('timeList.csv', 'r') as timeFile:
-            reader = csv.reader(timeFile, delimiter=DELIMITER)
-            reader = [[x.replace(',', '.') for x in l] for l in reader]
-            highscore_list_sorted = sorted(reader, key=lambda x: float(x[1]))[:10]
+        try:
 
-            for row in highscore_list_sorted:
-                times = [
-                    QtGui.QStandardItem(field.replace(".", ","))
-                    for field in row
-                ]
-                self.model.appendRow(times)
+            with open('timeList.csv', 'r') as timeFile:
+                reader = csv.reader(timeFile, delimiter=DELIMITER)
+                reader = [[x.replace(',', '.') for x in l] for l in reader]
+                highscore_list_sorted = sorted(reader, key=lambda x: float(x[1]))[:10]
+
+                for row in highscore_list_sorted:
+                    times = [
+                        QtGui.QStandardItem(field.replace(".", ","))
+                        for field in row
+                    ]
+                    self.model.appendRow(times)
+        except FileNotFoundError:
+            print("Timelist Files does not exist")
 
     def glas_not_set(self):
         self.glas_not_set_timer.start()
@@ -245,7 +250,7 @@ class Ui_MainWindow(object):
             writer.writerow(row)
 
     def play_sound(self, fileName):
-        self.filename = "sounds\\" + fileName
+        self.filename = "/var/lib/revpipyload/KnockOutMachine/sounds/" + fileName
         self.url = QtCore.QUrl.fromLocalFile(self.filename)
         self.content = QtMultimedia.QMediaContent(self.url)
         self.player.setMedia(self.content)
@@ -256,27 +261,27 @@ class Ui_MainWindow(object):
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
             if self.case(1):
-                self.movie = QtGui.QMovie("display\\Trump.gif")
+                self.movie = QtGui.QMovie("display/Trump.gif")
             else:
-                self.movie = QtGui.QMovie("display\\dog.gif")
+                self.movie = QtGui.QMovie("display/Bier2.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("laughter-2.mp3")
+            self.play_sound("applause-2.mp3")
         elif runTime <= 500:
             self.rand = randint(0, 6)
             self.case = lambda x: self.rand < x
             if self.case(1):
-                self.movie = QtGui.QMovie("display\\1.webp")
+                self.movie = QtGui.QMovie("display/1.webp")
             elif self.case(2):
-                self.movie = QtGui.QMovie("display\\2.gif")
+                self.movie = QtGui.QMovie("display/2.gif")
             elif self.case(3):
-                self.movie = QtGui.QMovie("display\\3.gif")
+                self.movie = QtGui.QMovie("display/3.gif")
             elif self.case(4):
-                self.movie = QtGui.QMovie("display\\4.gif")
+                self.movie = QtGui.QMovie("display/4.gif")
             elif self.case(5):
-                self.movie = QtGui.QMovie("display\\5.gif")
+                self.movie = QtGui.QMovie("display/5.gif")
             else:
-                self.movie = QtGui.QMovie("display\\6.gif")
+                self.movie = QtGui.QMovie("display/6.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("applause-8.mp3")
@@ -284,18 +289,18 @@ class Ui_MainWindow(object):
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
             if self.case(1):
-                self.movie = QtGui.QMovie("display\\Bier2.gif")
+                self.movie = QtGui.QMovie("display/Bier2.gif")
             else:
-                self.movie = QtGui.QMovie("display\\1.webp")
+                self.movie = QtGui.QMovie("display/1.webp")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("laughter-2.mp3")
 
         else:
-            self.movie = QtGui.QMovie("display\\dog.gif")
+            self.movie = QtGui.QMovie("display/dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("applause-2.mp3")
+            self.play_sound("laughter-2.mp3")
 
     def exit_function(self):
         self.rpi.exit(full=False)
@@ -311,7 +316,7 @@ class Ui_MainWindow(object):
         self.startButton.show()
         self.pictures.show()
 
-        self.pixmap = QtGui.QPixmap("display\\Logo-Button-Schuetzenverein.jpg")
+        self.pixmap = QtGui.QPixmap("display/Logo-Button-Schuetzenverein.jpg")
         self.pictures.setPixmap(self.pixmap)
 
     # TODO add cleanup if necessary
