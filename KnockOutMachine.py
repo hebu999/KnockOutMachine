@@ -47,13 +47,14 @@ class Ui_MainWindow(object):
         self.messages.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
-
         tableFont = QtGui.QFont("Times", 16)
         self.tableview = QtWidgets.QTableView(self.centralwidget)
         self.tableview.setObjectName("tableView")
-        self.tableview.setFixedSize(480, 900)
+        self.tableview.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.tableview.setMaximumWidth(500)
+        self.tableview.setMaximumHeight(900)
         self.tableview.verticalHeader().setDefaultSectionSize(85)
-        self.tableview.horizontalHeader().setDefaultSectionSize(200)
+        self.tableview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         self.tableview.setFont(tableFont)
         self.tableview.setModel(self.model)
         self.tableview.hide()
@@ -66,6 +67,12 @@ class Ui_MainWindow(object):
         self.startButton.setFont(font)
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
+
+        self.input_dialogue = QtWidgets.QInputDialog(self.centralwidget)
+        self.input_dialogue.setInputMode(QtWidgets.QInputDialog.TextInput)
+        self.input_dialogue.setFixedSize(250, 250)
+        self.input_dialogue.setWindowTitle("Namenseingabe")
+        self.input_dialogue.setLabelText("Bitte Namen eingeben:")
 
         self.toggleButton = QtWidgets.QPushButton(self.centralwidget)
         self.toggleButton.setFixedSize(171, 51)
@@ -145,6 +152,7 @@ class Ui_MainWindow(object):
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
+        self.input_dialogue.setStyleSheet("background-color: white;")
         self.toggleButton.setText(_translate("KnockOutMachine", "Toggle Input"))
         self.toggleButton.setStyleSheet("background-color: white;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
@@ -229,10 +237,12 @@ class Ui_MainWindow(object):
 
         if not self.timer.isActive():
             self.show_pictures(self.now)
-            self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
-                                                                          'Bitte Namen eingeben:')
+            self.pressed = self.input_dialogue.exec_()
+            self.inputName = self.input_dialogue.textValue()
+
             if self.pressed and self.inputName != '':
                 self.update_scores(self.inputName, self.runTime)
+                self.input_dialogue.clearMask()
             self.exit_function()
 
     def toggle_input(self):
