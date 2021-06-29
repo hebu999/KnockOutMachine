@@ -30,10 +30,11 @@ class Ui_MainWindow(object):
 
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
-        self.pictures.setFixedSize(800, 800)
+        self.pictures.setFixedSize(900, 853)
         self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("display\\Logo-Button-Schuetzenverein.jpg")
-        self.pictures.setPixmap(self.pixmap)
+        self.pixmap = QtGui.QPixmap("display\\main_menu.png")
+        self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
+        self.pictures.setPixmap(self.scaledPixmap)
         self.player = QtMultimedia.QMediaPlayer()
 
         palette = QtGui.QPalette()
@@ -96,6 +97,7 @@ class Ui_MainWindow(object):
 
         self.lcdCounter = QtWidgets.QLCDNumber(self.centralwidget)
         self.lcdCounter.setEnabled(False)
+        # TODO enlarge, 80% of monitor, centered
         self.lcdCounter.setFixedSize(301, 151)
         self.lcdCounter.setSmallDecimalPoint(False)
         self.lcdCounter.setDigitCount(5)
@@ -202,6 +204,7 @@ class Ui_MainWindow(object):
                         for field in row
                     ]
                     self.model.appendRow(times)
+                    self.tableview.setColumnHidden(2, True)
         except FileNotFoundError:
             print("Timelist File does not exist")
 
@@ -260,8 +263,9 @@ class Ui_MainWindow(object):
         self.update_timer()
 
     def update_scores(self, inputName, runTime):
+        self.datetime = QtCore.QDateTime.currentDateTime()
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
-        row = [inputName, runTime.replace(".", ",")]
+        row = [inputName, runTime.replace(".", ","), self.datetime.toString(QtCore.Qt.DefaultLocaleLongDate)]
 
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
@@ -337,8 +341,8 @@ class Ui_MainWindow(object):
         self.startButton.show()
         self.pictures.show()
 
-        self.pixmap = QtGui.QPixmap("display\\Logo-Button-Schuetzenverein.jpg")
-        self.pictures.setPixmap(self.pixmap)
+        self.pixmap = QtGui.QPixmap("display\\main_menu.png")
+        self.pictures.setPixmap(self.scaledPixmap)
 
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
