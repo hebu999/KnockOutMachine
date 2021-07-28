@@ -12,7 +12,7 @@ import csv
 import locale
 import revpimodio2
 
-Input_I1 = True
+Input_I1 = False
 
 
 class Ui_MainWindow(object):
@@ -31,7 +31,7 @@ class Ui_MainWindow(object):
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(900, 853)
-        self.pictures.setAlignment(QtCore.Qt.AlignCenter)
+        # self.pictures.setAlignment(QtCore.Qt.AlignCenter)
         self.pixmap = QtGui.QPixmap("display\\main_menu.png")
         self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
         self.pictures.setPixmap(self.scaledPixmap)
@@ -45,6 +45,7 @@ class Ui_MainWindow(object):
         self.messages.setPalette(palette)
         self.messages.setFont(mfont)
         self.messages.setAlignment(QtCore.Qt.AlignCenter)
+        self.messages.resize(self.messages.sizeHint())
         self.messages.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
@@ -60,45 +61,42 @@ class Ui_MainWindow(object):
         self.tableview.setModel(self.model)
         self.tableview.hide()
 
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(120)
+        buttonFont = QtGui.QFont("Times", 16, QtGui.QFont.Bold)
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
-        self.startButton.setFixedSize(171, 51)
-        self.startButton.setFont(font)
+        self.startButton.setFixedSize(191, 71)
+        self.startButton.setFont(buttonFont)
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
         self.input_dialogue = QtWidgets.QInputDialog(self.centralwidget)
         self.input_dialogue.setInputMode(QtWidgets.QInputDialog.TextInput)
-        self.input_dialogue.setFixedSize(250, 250)
+        self.input_dialogue.resize(self.input_dialogue.sizeHint())
         self.input_dialogue.setWindowTitle("Namenseingabe")
         self.input_dialogue.setLabelText("Bitte Namen eingeben:")
 
         self.toggleButton = QtWidgets.QPushButton(self.centralwidget)
-        self.toggleButton.setFixedSize(171, 51)
-        self.toggleButton.setFont(font)
+        self.toggleButton.setFixedSize(191, 71)
+        self.toggleButton.setFont(buttonFont)
         self.toggleButton.setObjectName("toggleButton")
         self.toggleButton.clicked.connect(lambda: self.toggle_input())
         self.toggleButton.hide()
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
-        self.highscoreButton.setFont(font)
+        self.highscoreButton.setFont(buttonFont)
         self.highscoreButton.setObjectName("highscoreButton")
-        self.highscoreButton.setFixedSize(171, 51)
+        self.highscoreButton.setFixedSize(191, 71)
         self.highscoreButton.clicked.connect(lambda: self.on_high_score_button_clicked())
 
         self.cancelButton = QtWidgets.QPushButton(self.centralwidget)
-        self.cancelButton.setFont(font)
+        self.cancelButton.setFont(buttonFont)
         self.cancelButton.setObjectName("cancelButton")
-        self.cancelButton.setFixedSize(171, 51)
+        self.cancelButton.setFixedSize(191, 71)
         self.cancelButton.clicked.connect(lambda: self.exit_function())
         self.cancelButton.hide()
 
         self.lcdCounter = QtWidgets.QLCDNumber(self.centralwidget)
         self.lcdCounter.setEnabled(False)
-        # TODO enlarge, 80% of monitor, centered
-        self.lcdCounter.setFixedSize(301, 151)
+        self.lcdCounter.setFixedSize(1050, 450)
         self.lcdCounter.setSmallDecimalPoint(False)
         self.lcdCounter.setDigitCount(5)
         self.lcdCounter.setObjectName("lcdCounter")
@@ -119,21 +117,24 @@ class Ui_MainWindow(object):
         self.glas_not_set_timer.setInterval(100)
         self.glas_not_set_timer.timeout.connect(self.glas_not_set)
 
-        self.hboxPictures = QtWidgets.QHBoxLayout()
-        self.hboxPictures.addWidget(self.pictures)
-        self.hboxPictures.addWidget(self.messages)
-        self.hboxPictures.addWidget(self.tableview)
+        self.gridPictures = QtWidgets.QGridLayout()
+        self.gridPictures.addWidget(self.lcdCounter, 1, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.messages, 2, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.pictures, 3, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.tableview, 0, QtCore.Qt.AlignCenter)
 
         self.hboxButtons = QtWidgets.QHBoxLayout()
-        self.hboxButtons.addWidget(self.lcdCounter)
         self.hboxButtons.addWidget(self.startButton)
         self.hboxButtons.addWidget(self.toggleButton)
         self.hboxButtons.addWidget(self.highscoreButton)
-        self.hboxButtons.addWidget(self.cancelButton)
+        self.hboxButtons.addWidget(self.cancelButton, QtCore.Qt.AlignRight)
 
+        # TODO set correct layout span and stretch
         self.vbox = QtWidgets.QVBoxLayout()
-        self.vbox.addLayout(self.hboxPictures)
+        self.vbox.addLayout(self.gridPictures)
+        self.vbox.addStretch(1)
         self.vbox.addLayout(self.hboxButtons)
+        self.vbox.addStretch(3)
 
         self.centralwidget.setLayout(self.vbox)
         MainWindow.setCentralWidget(self.centralwidget)
