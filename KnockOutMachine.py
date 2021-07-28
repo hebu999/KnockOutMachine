@@ -32,7 +32,7 @@ class Ui_MainWindow(object):
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(900, 853)
         # self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("display\\main_menu.png")
+        self.pixmap = QtGui.QPixmap("display/main_menu.png")
         self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
         self.pictures.setPixmap(self.scaledPixmap)
         self.player = QtMultimedia.QMediaPlayer()
@@ -167,7 +167,7 @@ class Ui_MainWindow(object):
 
     def on_start_button_clicked(self):
         self.lcdCounter.display("00.00")
-        self.movie = QtGui.QMovie("display\Bier.webp")
+        self.movie = QtGui.QMovie("display/dog.gif")
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelButton.show()
@@ -273,7 +273,7 @@ class Ui_MainWindow(object):
             writer.writerow(row)
 
     def play_sound(self, fileName):
-        self.filename = "sounds\\" + fileName
+        self.filename = "/KnockOutMachine/sounds/" + fileName
         self.url = QtCore.QUrl.fromLocalFile(self.filename)
         self.content = QtMultimedia.QMediaContent(self.url)
         self.player.setMedia(self.content)
@@ -284,9 +284,9 @@ class Ui_MainWindow(object):
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
             if self.case(1):
-                self.movie = QtGui.QMovie("display\\Trump.gif")
+                self.movie = QtGui.QMovie("display/Trump.gif")
             else:
-                self.movie = QtGui.QMovie("display\\dog.gif")
+                self.movie = QtGui.QMovie("display/dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("applause-2.mp3")
@@ -295,17 +295,17 @@ class Ui_MainWindow(object):
             self.rand = randint(0, 6)
             self.case = lambda x: self.rand < x
             if self.case(1):
-                self.movie = QtGui.QMovie("display\\1.webp")
+                self.movie = QtGui.QMovie("display/1.webp")
             elif self.case(2):
-                self.movie = QtGui.QMovie("display\\2.gif")
+                self.movie = QtGui.QMovie("display/2.gif")
             elif self.case(3):
-                self.movie = QtGui.QMovie("display\\3.gif")
+                self.movie = QtGui.QMovie("display/3.gif")
             elif self.case(4):
-                self.movie = QtGui.QMovie("display\\4.gif")
+                self.movie = QtGui.QMovie("display/4.gif")
             elif self.case(5):
-                self.movie = QtGui.QMovie("display\\5.gif")
+                self.movie = QtGui.QMovie("display/5.gif")
             else:
-                self.movie = QtGui.QMovie("display\\6.gif")
+                self.movie = QtGui.QMovie("display/6.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("applause-8.mp3")
@@ -314,15 +314,15 @@ class Ui_MainWindow(object):
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
             if self.case(1):
-                self.movie = QtGui.QMovie("display\\Bier2.gif")
+                self.movie = QtGui.QMovie("display/Bier2.gif")
             else:
-                self.movie = QtGui.QMovie("display\\1.webp")
+                self.movie = QtGui.QMovie("display/1.webp")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("laughter-2.mp3")
 
         else:
-            self.movie = QtGui.QMovie("display\\dog.gif")
+            self.movie = QtGui.QMovie("display/dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("laughter-2.mp3")
@@ -342,7 +342,7 @@ class Ui_MainWindow(object):
         self.startButton.show()
         self.pictures.show()
 
-        self.pixmap = QtGui.QPixmap("display\\main_menu.png")
+        self.pixmap = QtGui.QPixmap("display/main_menu.png")
         self.pictures.setPixmap(self.scaledPixmap)
 
     # TODO add cleanup if necessary
