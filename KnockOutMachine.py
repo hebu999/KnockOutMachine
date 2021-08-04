@@ -31,8 +31,7 @@ class Ui_MainWindow(object):
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
         self.pictures.setFixedSize(900, 853)
-        # self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("display\\main_menu.png")
+        self.pixmap = QtGui.QPixmap("display/main_menu.png")
         self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
         self.pictures.setPixmap(self.scaledPixmap)
         self.player = QtMultimedia.QMediaPlayer()
@@ -266,7 +265,7 @@ class Ui_MainWindow(object):
     def update_scores(self, inputName, runTime):
         self.datetime = QtCore.QDateTime.currentDateTime()
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
-        row = [inputName, runTime.replace(".", ","), self.datetime.toString(QtCore.Qt.DefaultLocaleLongDate)]
+        row = [inputName, runTime.replace(".", ","), self.datetime.toString(QtCore.Qt.DefaultLocaleShortDate)]
 
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
