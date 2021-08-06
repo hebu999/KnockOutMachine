@@ -44,7 +44,7 @@ class Ui_MainWindow(object):
         self.messages.setPalette(palette)
         self.messages.setFont(mfont)
         self.messages.setAlignment(QtCore.Qt.AlignCenter)
-        self.messages.resize(self.messages.sizeHint())
+        self.messages.setFixedSize(1400, 200)
         self.messages.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
@@ -160,6 +160,7 @@ class Ui_MainWindow(object):
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
         self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
+        self.cancelButton.setIcon(QtGui.QIcon("display/cancel_button.png"))
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
         self.tableview.setStyleSheet("background-color: white;")
