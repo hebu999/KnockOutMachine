@@ -30,59 +30,66 @@ class Ui_MainWindow(object):
 
         self.pictures = QtWidgets.QLabel(self.centralwidget)
         self.pictures.setObjectName("pictures")
-        self.pictures.setFixedSize(800, 800)
-        self.pictures.setAlignment(QtCore.Qt.AlignCenter)
-        self.pixmap = QtGui.QPixmap("display/Logo-Button-Schuetzenverein.jpg")
-        self.pictures.setPixmap(self.pixmap)
+        self.pictures.setFixedSize(900, 853)
+        self.pixmap = QtGui.QPixmap("display/main_menu.png")
+        self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
+        self.pictures.setPixmap(self.scaledPixmap)
         self.player = QtMultimedia.QMediaPlayer()
 
         palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.black)
+        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
         mfont = QtGui.QFont("Times", 80, QtGui.QFont.Bold)
         self.messages = QtWidgets.QLineEdit(self.centralwidget)
         self.messages.setObjectName("messages")
         self.messages.setPalette(palette)
+        self.messages.setReadOnly(True)
         self.messages.setFont(mfont)
         self.messages.setAlignment(QtCore.Qt.AlignCenter)
+        self.messages.setFixedSize(1400, 200)
         self.messages.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
-
         tableFont = QtGui.QFont("Times", 16)
         self.tableview = QtWidgets.QTableView(self.centralwidget)
         self.tableview.setObjectName("tableView")
-        self.tableview.setFixedSize(480, 900)
+        self.tableview.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.tableview.setMaximumWidth(500)
+        self.tableview.setMaximumHeight(900)
         self.tableview.verticalHeader().setDefaultSectionSize(85)
-        self.tableview.horizontalHeader().setDefaultSectionSize(200)
+        self.tableview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         self.tableview.setFont(tableFont)
         self.tableview.setModel(self.model)
         self.tableview.hide()
 
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(120)
+        buttonFont = QtGui.QFont("Times", 16, QtGui.QFont.Bold)
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
-        self.startButton.setFixedSize(171, 51)
-        self.startButton.setFont(font)
+        self.startButton.setFixedSize(191, 71)
+        self.startButton.setFont(buttonFont)
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
+        self.input_dialogue = QtWidgets.QInputDialog(self.centralwidget)
+        self.input_dialogue.setInputMode(QtWidgets.QInputDialog.TextInput)
+        self.input_dialogue.resize(self.input_dialogue.sizeHint())
+        self.input_dialogue.setWindowTitle("Namenseingabe")
+        self.input_dialogue.setLabelText("Bitte Namen eingeben:")
+
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
-        self.highscoreButton.setFont(font)
+        self.highscoreButton.setFont(buttonFont)
         self.highscoreButton.setObjectName("highscoreButton")
-        self.highscoreButton.setFixedSize(171, 51)
+        self.highscoreButton.setFixedSize(191, 71)
         self.highscoreButton.clicked.connect(lambda: self.on_high_score_button_clicked())
 
         self.cancelButton = QtWidgets.QPushButton(self.centralwidget)
-        self.cancelButton.setFont(font)
+        self.cancelButton.setFont(buttonFont)
         self.cancelButton.setObjectName("cancelButton")
-        self.cancelButton.setFixedSize(171, 51)
+        self.cancelButton.setFixedSize(191, 71)
         self.cancelButton.clicked.connect(lambda: self.exit_function())
         self.cancelButton.hide()
 
         self.lcdCounter = QtWidgets.QLCDNumber(self.centralwidget)
         self.lcdCounter.setEnabled(False)
-        self.lcdCounter.setFixedSize(301, 151)
+        self.lcdCounter.setFixedSize(1350, 750)
         self.lcdCounter.setSmallDecimalPoint(False)
         self.lcdCounter.setDigitCount(5)
         self.lcdCounter.setObjectName("lcdCounter")
@@ -103,20 +110,23 @@ class Ui_MainWindow(object):
         self.glas_not_set_timer.setInterval(100)
         self.glas_not_set_timer.timeout.connect(self.glas_not_set)
 
-        self.hboxPictures = QtWidgets.QHBoxLayout()
-        self.hboxPictures.addWidget(self.pictures)
-        self.hboxPictures.addWidget(self.messages)
-        self.hboxPictures.addWidget(self.tableview)
+        self.gridPictures = QtWidgets.QGridLayout()
+        self.gridPictures.addWidget(self.lcdCounter, 1, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.messages, 2, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.pictures, 3, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.tableview, 0, QtCore.Qt.AlignCenter)
 
         self.hboxButtons = QtWidgets.QHBoxLayout()
-        self.hboxButtons.addWidget(self.lcdCounter)
         self.hboxButtons.addWidget(self.startButton)
         self.hboxButtons.addWidget(self.highscoreButton)
-        self.hboxButtons.addWidget(self.cancelButton)
+        self.hboxButtons.addWidget(self.cancelButton, QtCore.Qt.AlignRight)
 
+        # TODO set correct layout span and stretch
         self.vbox = QtWidgets.QVBoxLayout()
-        self.vbox.addLayout(self.hboxPictures)
+        self.vbox.addLayout(self.gridPictures)
+        self.vbox.addStretch(1)
         self.vbox.addLayout(self.hboxButtons)
+        self.vbox.addStretch(3)
 
         self.centralwidget.setLayout(self.vbox)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -133,14 +143,17 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("KnockOutMachine", "KnockOutMachine"))
         MainWindow.showFullScreen()
-        MainWindow.setStyleSheet("background-color: white;")
-        # MainWindow.setStyleSheet("background-color: #113f0c;")
+        MainWindow.setStyleSheet("background-color: #113f0c;")
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
+        self.input_dialogue.setStyleSheet("background-color: white;")
+        self.messages.setStyleSheet("border: none;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
-        self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
+        # self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
+        self.cancelButton.setIcon(QtGui.QIcon("display/cancel_button.png"))
+        self.cancelButton.setIconSize(QtCore.QSize(50, 50))
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
         self.tableview.setStyleSheet("background-color: white;")
@@ -174,7 +187,6 @@ class Ui_MainWindow(object):
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
 
         try:
-
             with open('timeList.csv', 'r') as timeFile:
                 reader = csv.reader(timeFile, delimiter=DELIMITER)
                 reader = [[x.replace(',', '.') for x in l] for l in reader]
@@ -186,8 +198,9 @@ class Ui_MainWindow(object):
                         for field in row
                     ]
                     self.model.appendRow(times)
+                    self.tableview.setColumnHidden(2, True)
         except FileNotFoundError:
-            print("Timelist Files does not exist")
+            print("Timelist File does not exist")
 
     def glas_not_set(self):
         self.glas_not_set_timer.start()
@@ -208,8 +221,8 @@ class Ui_MainWindow(object):
 
     def start_timer(self):
         self.messages.hide()
-        self.pictures.show()
-        self.pictures.setMovie(self.movie)
+        # self.pictures.show()
+        # self.pictures.setMovie(self.movie)
 
         self.now = 0
         self.update_timer()
@@ -220,11 +233,13 @@ class Ui_MainWindow(object):
             self.timer.stop()
 
         if not self.timer.isActive():
-            self.show_pictures(self.now)
-            self.inputName, self.pressed = QtWidgets.QInputDialog.getText(self.centralwidget, 'Eingabe',
-                                                                          'Bitte Namen eingeben:')
+            # self.show_pictures(self.now)
+            self.pressed = self.input_dialogue.exec_()
+            self.inputName = self.input_dialogue.textValue()
+
             if self.pressed and self.inputName != '':
                 self.update_scores(self.inputName, self.runTime)
+                self.input_dialogue.clearMask()
             self.exit_function()
 
     def toggle_input(self, ioname, iovalue):
@@ -242,8 +257,9 @@ class Ui_MainWindow(object):
         self.update_timer()
 
     def update_scores(self, inputName, runTime):
+        self.datetime = QtCore.QDateTime.currentDateTime()
         DELIMITER = ';' if locale.localeconv()['decimal_point'] == ',' else ','
-        row = [inputName, runTime.replace(".", ",")]
+        row = [inputName, runTime.replace(".", ","), self.datetime.toString(QtCore.Qt.DefaultLocaleShortDate)]
 
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
@@ -263,10 +279,11 @@ class Ui_MainWindow(object):
             if self.case(1):
                 self.movie = QtGui.QMovie("display/Trump.gif")
             else:
-                self.movie = QtGui.QMovie("display/Bier2.gif")
+                self.movie = QtGui.QMovie("display/dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("applause-2.mp3")
+
         elif runTime <= 500:
             self.rand = randint(0, 6)
             self.case = lambda x: self.rand < x
@@ -285,6 +302,7 @@ class Ui_MainWindow(object):
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("applause-8.mp3")
+
         elif runTime <= 800:
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
@@ -316,8 +334,8 @@ class Ui_MainWindow(object):
         self.startButton.show()
         self.pictures.show()
 
-        self.pixmap = QtGui.QPixmap("display/Logo-Button-Schuetzenverein.jpg")
-        self.pictures.setPixmap(self.pixmap)
+        self.pixmap = QtGui.QPixmap("display/main_menu.png")
+        self.pictures.setPixmap(self.scaledPixmap)
 
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
