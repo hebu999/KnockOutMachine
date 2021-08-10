@@ -42,6 +42,7 @@ class Ui_MainWindow(object):
         self.messages = QtWidgets.QLineEdit(self.centralwidget)
         self.messages.setObjectName("messages")
         self.messages.setPalette(palette)
+        self.messages.setReadOnly(True)
         self.messages.setFont(mfont)
         self.messages.setAlignment(QtCore.Qt.AlignCenter)
         self.messages.setFixedSize(1400, 200)
@@ -95,7 +96,7 @@ class Ui_MainWindow(object):
 
         self.lcdCounter = QtWidgets.QLCDNumber(self.centralwidget)
         self.lcdCounter.setEnabled(False)
-        self.lcdCounter.setFixedSize(1050, 450)
+        self.lcdCounter.setFixedSize(1350, 750)
         self.lcdCounter.setSmallDecimalPoint(False)
         self.lcdCounter.setDigitCount(5)
         self.lcdCounter.setObjectName("lcdCounter")
@@ -155,12 +156,14 @@ class Ui_MainWindow(object):
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
         self.input_dialogue.setStyleSheet("background-color: white;")
+        self.messages.setStyleSheet("border: none;")
         self.toggleButton.setText(_translate("KnockOutMachine", "Toggle Input"))
         self.toggleButton.setStyleSheet("background-color: white;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
-        self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
+        # self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
         self.cancelButton.setIcon(QtGui.QIcon("display/cancel_button.png"))
+        self.cancelButton.setIconSize(QtCore.QSize(50, 50))
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
         self.tableview.setStyleSheet("background-color: white;")
@@ -228,8 +231,8 @@ class Ui_MainWindow(object):
 
     def start_timer(self):
         self.messages.hide()
-        self.pictures.show()
-        self.pictures.setMovie(self.movie)
+        # self.pictures.show()
+        # self.pictures.setMovie(self.movie)
 
         self.now = 0
         self.update_timer()
@@ -240,7 +243,7 @@ class Ui_MainWindow(object):
             self.timer.stop()
 
         if not self.timer.isActive():
-            self.show_pictures(self.now)
+            # self.show_pictures(self.now)
             self.pressed = self.input_dialogue.exec_()
             self.inputName = self.input_dialogue.textValue()
 
