@@ -1,7 +1,7 @@
 /venv/
 /shelf/
 /workspace.xml
-*.csv
+/.idea
 *.ui
 *.exe
 *.spec
