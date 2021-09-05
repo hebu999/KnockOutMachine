@@ -63,6 +63,16 @@ class Ui_MainWindow(object):
         self.tableview.setModel(self.model)
         self.tableview.hide()
 
+        self.input_window = QtWidgets.QWidget()
+        self.input_window.setWindowTitle("Bitte Namen eingeben")
+        self.input_window.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
+        self.input_window.resize(300, 100)
+        self.input_window.move(850, 820)
+        self.input_layout = QtWidgets.QFormLayout()
+
+        self.input_dialogue = QtWidgets.QLineEdit(self.centralwidget)
+        self.input_dialogue.setMaxLength(30)
+
         buttonFont = QtGui.QFont("Times", 16, QtGui.QFont.Bold)
         self.startButton = QtWidgets.QPushButton(self.centralwidget)
         self.startButton.setFixedSize(191, 71)
@@ -70,11 +80,10 @@ class Ui_MainWindow(object):
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
-        self.input_dialogue = QtWidgets.QInputDialog(self.centralwidget)
-        self.input_dialogue.setInputMode(QtWidgets.QInputDialog.TextInput)
-        self.input_dialogue.resize(self.input_dialogue.sizeHint())
-        self.input_dialogue.setWindowTitle("Namenseingabe")
-        self.input_dialogue.setLabelText("Bitte Namen eingeben:")
+        self.inputButton = QtWidgets.QPushButton(self.centralwidget)
+        self.inputButton.setObjectName("inputButton")
+        self.inputButton.resize(self.inputButton.sizeHint())
+        self.inputButton.setDisabled(True)
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
         self.highscoreButton.setFont(buttonFont)
@@ -123,6 +132,10 @@ class Ui_MainWindow(object):
         self.hboxButtons.addWidget(self.highscoreButton)
         self.hboxButtons.addWidget(self.cancelButton, QtCore.Qt.AlignRight)
 
+        self.input_layout.addRow("", self.input_dialogue)
+        self.input_layout.addRow("", self.inputButton)
+        self.input_window.setLayout(self.input_layout)
+
         # TODO set correct layout span and stretch
         self.vbox = QtWidgets.QVBoxLayout()
         self.vbox.addLayout(self.gridPictures)
@@ -130,6 +143,11 @@ class Ui_MainWindow(object):
         self.vbox.addLayout(self.hboxButtons)
         self.vbox.addStretch(3)
 
+        self.input_dialogue.textChanged.connect(self.enable_input_button)
+        self.input_dialogue.returnPressed.connect(self.inputButton.click)
+        self.inputButton.clicked.connect(lambda: self.update_scores(self.input_dialogue.text(), self.runTime))
+        self.inputButton.clicked.connect(lambda: self.input_window.close())
+        self.inputButton.clicked.connect(lambda: self.exit_function())
         self.centralwidget.setLayout(self.vbox)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -149,7 +167,7 @@ class Ui_MainWindow(object):
 
         self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
         self.startButton.setStyleSheet("background-color: white;")
-        self.input_dialogue.setStyleSheet("background-color: white;")
+        self.inputButton.setText(_translate("KnockOutMachine", "Eingabe bestätigen"))
         self.messages.setStyleSheet("border: none;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
@@ -159,6 +177,12 @@ class Ui_MainWindow(object):
         self.cancelButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: white;")
         self.tableview.setStyleSheet("background-color: white;")
+
+    def enable_input_button(self):
+        if len(self.input_dialogue.text()) > 0:
+            self.inputButton.setDisabled(False)
+        else:
+            self.inputButton.setDisabled(True)
 
     def on_start_button_clicked(self):
         self.lcdCounter.display("00.00")
@@ -236,13 +260,7 @@ class Ui_MainWindow(object):
 
         if not self.timer.isActive():
             # self.show_pictures(self.now)
-            self.pressed = self.input_dialogue.exec_()
-            self.inputName = self.input_dialogue.textValue()
-
-            if self.pressed and self.inputName != '':
-                self.update_scores(self.inputName, self.runTime)
-                self.input_dialogue.clearMask()
-            self.exit_function()
+            self.input_window.show()
 
     def toggle_input(self, ioname, iovalue):
         global Input_I1
@@ -266,6 +284,7 @@ class Ui_MainWindow(object):
         with open('timeList.csv', 'a', newline='') as timeFile:
             writer = csv.writer(timeFile, delimiter=DELIMITER)
             writer.writerow(row)
+        self.input_dialogue.clear()
 
     def play_sound(self, fileName):
         self.filename = "/var/lib/revpipyload/KnockOutMachine/sounds/" + fileName
