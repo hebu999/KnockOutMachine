@@ -5,6 +5,8 @@
 
 __author__ = "Heiner Buescher"
 
+import time
+
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
 from random import randint
 import sys
@@ -319,6 +321,21 @@ class Ui_MainWindow(object):
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound("laughter-2.mp3")
+
+    # TODO toggle outputs in certain pattern
+    def change_output(self, highscore):
+
+        # red leds
+        if highscore:
+            self.rpi.io.O_5 = True
+            self.rpi.io.O_6 = True
+            self.rpi.io.O_7 = True
+
+        t_end = time.time() + 10
+        while time.time() < t_end:
+            self.rpi.io.O_1 = not self.rpi.io.O_1
+            self.rpi.io.O_2 = not self.rpi.io.O_2
+            self.rpi.io.O_3 = not self.rpi.io.O_3
 
     def exit_function(self):
         self.rpi.exit(full=False)
