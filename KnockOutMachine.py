@@ -242,7 +242,7 @@ class Ui_MainWindow(object):
         self.messages.setText("Bereit?")
         if Input_I1:
             self.glas_set_timer.stop()
-            self.movie.start()
+            # self.movie.start()
             self.start_timer()
 
     def start_timer(self):
