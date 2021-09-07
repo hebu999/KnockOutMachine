@@ -12,7 +12,7 @@ import csv
 import locale
 import revpimodio2
 
-Input_I1 = False
+Input_I1 = True
 
 
 class Ui_MainWindow(object):
@@ -203,7 +203,7 @@ class Ui_MainWindow(object):
         self.highscoreButton.hide()
         self.pictures.hide()
 
-        if not Input_I1:
+        if Input_I1:
             self.glas_not_set()
         else:
             self.glas_set()
@@ -240,7 +240,7 @@ class Ui_MainWindow(object):
         self.glas_not_set_timer.start()
         self.messages.show()
         self.messages.setText("Bitte Glas vor Sensor stellen!")
-        if Input_I1:
+        if not Input_I1:
             self.glas_not_set_timer.stop()
             self.glas_set()
 
@@ -248,7 +248,7 @@ class Ui_MainWindow(object):
         self.glas_set_timer.start()
         self.messages.show()
         self.messages.setText("Bereit?")
-        if not Input_I1:
+        if Input_I1:
             self.glas_set_timer.stop()
             self.movie.start()
             self.start_timer()
@@ -263,7 +263,7 @@ class Ui_MainWindow(object):
         self.timer.start(10)
 
     def stop_timer(self):
-        if Input_I1:
+        if not Input_I1:
             self.timer.stop()
 
         if not self.timer.isActive():
