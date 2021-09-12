@@ -65,7 +65,6 @@ class Ui_MainWindow(object):
 
         self.input_window = QtWidgets.QWidget()
         self.input_window.setWindowTitle("Bitte Namen eingeben")
-        self.input_window.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         self.input_window.resize(300, 100)
         self.input_window.move(850, 820)
         self.input_layout = QtWidgets.QFormLayout()
@@ -239,7 +238,7 @@ class Ui_MainWindow(object):
     def glas_set(self):
         self.glas_set_timer.start()
         self.messages.show()
-        self.messages.setText("Bereit?")
+        self.messages.setText("Glas erkannt, wenn bereit los!")
         if Input_I1:
             self.glas_set_timer.stop()
             # self.movie.start()
