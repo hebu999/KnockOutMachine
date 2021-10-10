@@ -123,8 +123,8 @@ class Ui_MainWindow(object):
         self.lcdCounter.hide()
         self.runTime = ""
 
-        self.timer, self.glass_not_set_timer, self.glass_set_timer = QtCore.QTimer(), QtCore.QTimer(), QtCore.QTimer()
-        self.timer.setInterval(100)
+        self.timer, self.glass_not_set_timer, self.glass_set_timer = QtCore.QTimer(
+            timerType=QtCore.Qt.PreciseTimer), QtCore.QTimer(), QtCore.QTimer()
         self.timer.timeout.connect(self.tick_timer)
         self.timer.timeout.connect(self.stop_timer)
 
