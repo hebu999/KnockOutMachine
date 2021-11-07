@@ -6,6 +6,7 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
+from PyQt5.QtCore import QThread, pyqtSignal, QEventLoop
 from random import randint
 import sys
 import csv
@@ -13,11 +14,20 @@ import locale
 import revpimodio2
 
 Input_I1 = True
+runTime = "00.00"
+
+
+def toggle_input():
+    global Input_I1
+    Input_I1 = not Input_I1
 
 
 class Ui_MainWindow(object):
 
-    # def __init__(self):
+    def __init__(self):
+        self.timer_thread = TimerThread()
+        self.timer_thread.update_signal.connect(self.update_lcd)
+
     #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
     #     self.rpi.handlesignalend(self.cleanup_revpi)
     #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
@@ -89,7 +99,7 @@ class Ui_MainWindow(object):
         self.toggleButton.setFixedSize(191, 71)
         self.toggleButton.setFont(buttonFont)
         self.toggleButton.setObjectName("toggleButton")
-        self.toggleButton.clicked.connect(lambda: self.toggle_input())
+        self.toggleButton.clicked.connect(lambda: toggle_input())
         self.toggleButton.hide()
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
@@ -121,12 +131,8 @@ class Ui_MainWindow(object):
         self.lcdCounter.setObjectName("lcdCounter")
         self.lcdCounter.display("00.00")
         self.lcdCounter.hide()
-        self.runTime = ""
 
-        self.timer, self.glass_not_set_timer, self.glass_set_timer = QtCore.QTimer(
-            timerType=QtCore.Qt.PreciseTimer), QtCore.QTimer(), QtCore.QTimer()
-        self.timer.timeout.connect(self.tick_timer)
-        self.timer.timeout.connect(self.stop_timer)
+        self.glass_not_set_timer, self.glass_set_timer = QtCore.QTimer(), QtCore.QTimer()
 
         self.glass_set_timer.setSingleShot(True)
         self.glass_set_timer.setInterval(100)
@@ -162,7 +168,7 @@ class Ui_MainWindow(object):
 
         self.input_dialogue.textChanged.connect(self.enable_input_button)
         self.input_dialogue.returnPressed.connect(self.inputButton.click)
-        self.inputButton.clicked.connect(lambda: self.update_scores(self.input_dialogue.text(), self.runTime))
+        self.inputButton.clicked.connect(lambda: self.update_scores(self.input_dialogue.text(), runTime))
         self.inputButton.clicked.connect(lambda: self.input_window.close())
         self.inputButton.clicked.connect(lambda: self.exit_timer_function())
         self.centralwidget.setLayout(self.vbox)
@@ -272,32 +278,11 @@ class Ui_MainWindow(object):
         self.messages.hide()
         # self.pictures.show()
         # self.pictures.setMovie(self.movie)
+        # self.lcdCounter.display(runTime)
+        self.timer_thread.start()
 
-        self.now = 0
-        self.update_timer()
-        self.timer.start(10)
-
-    def stop_timer(self):
-        if not Input_I1:
-            self.timer.stop()
-
-        if not self.timer.isActive():
-            # self.show_pictures(self.now)
-            self.input_window.show()
-
-    def toggle_input(self):
-        global Input_I1
-        Input_I1 = not Input_I1
-
-    def update_timer(self):
-        self.runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
-        self.lcdCounter.display(self.runTime)
-        if self.now / 100 == 99:
-            self.exit_timer_function()
-
-    def tick_timer(self):
-        self.now += 1
-        self.update_timer()
+    def update_lcd(self):
+        self.lcdCounter.display(runTime)
 
     def update_scores(self, inputName, runTime):
         self.datetime = QtCore.QDateTime.currentDateTime()
@@ -378,7 +363,7 @@ class Ui_MainWindow(object):
 
     def exit_timer_function(self):
         # self.rpi.exit(full=False)
-        self.timer.stop()
+        self.timer_thread.hard_stop_timer()
         self.glass_set_timer.stop()
         self.glass_not_set_timer.stop()
         self.player.stop()
@@ -399,6 +384,45 @@ class Ui_MainWindow(object):
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
         return None
+
+
+class TimerThread(QThread):
+    update_signal = pyqtSignal()
+
+    def __init__(self):
+        super(TimerThread, self).__init__()
+        self.timer = QtCore.QTimer()
+        self.timer.moveToThread(self)
+        self.timer.timeout.connect(self.tick_timer)
+        self.timer.timeout.connect(self.stop_timer)
+
+    def update_timer(self):
+        global runTime
+        runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
+        self.update_signal.emit()
+
+    def hard_stop_timer(self):
+        self.timer.stop()
+        self.quit()
+
+    def stop_timer(self):
+        if not Input_I1 or self.now / 100 == 99:
+            self.timer.stop()
+            self.quit()
+        if not self.timer.isActive():
+            # self.show_pictures(now)
+            ui.input_window.show()
+
+    def tick_timer(self):
+        self.now += 1
+        self.update_timer()
+
+    def run(self):
+        self.now = 0
+        self.update_timer()
+        self.timer.start(10)
+        loop = QEventLoop()
+        loop.exec_()
 
 
 if __name__ == "__main__":
