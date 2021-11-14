@@ -27,7 +27,6 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.timer_thread = TimerThread()
         self.timer_thread.update_signal.connect(self.update_lcd)
-
     #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
     #     self.rpi.handlesignalend(self.cleanup_revpi)
     #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
@@ -363,7 +362,7 @@ class Ui_MainWindow(object):
 
     def exit_timer_function(self):
         # self.rpi.exit(full=False)
-        self.timer_thread.hard_stop_timer()
+        self.timer_thread.stop_timer_signal.emit()
         self.glass_set_timer.stop()
         self.glass_not_set_timer.stop()
         self.player.stop()
@@ -388,28 +387,32 @@ class Ui_MainWindow(object):
 
 class TimerThread(QThread):
     update_signal = pyqtSignal()
+    stop_timer_signal = pyqtSignal()
 
     def __init__(self):
         super(TimerThread, self).__init__()
+        self.hard_stop = False
         self.timer = QtCore.QTimer()
         self.timer.moveToThread(self)
         self.timer.timeout.connect(self.tick_timer)
         self.timer.timeout.connect(self.stop_timer)
+        self.stop_timer_signal.connect(self.hard_stop_timer)
 
     def update_timer(self):
         global runTime
         runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
         self.update_signal.emit()
 
+    @QtCore.pyqtSlot()
     def hard_stop_timer(self):
+        self.hard_stop = True
         self.timer.stop()
-        self.quit()
 
     def stop_timer(self):
-        if not Input_I1 or self.now / 100 == 99:
+        if not Input_I1 or self.now / 100 == 99 or self.hard_stop:
             self.timer.stop()
             self.quit()
-        if not self.timer.isActive():
+        if not self.timer.isActive() and not self.hard_stop:
             # self.show_pictures(now)
             ui.input_window.show()
 
@@ -419,6 +422,7 @@ class TimerThread(QThread):
 
     def run(self):
         self.now = 0
+        self.hard_stop = False
         self.update_timer()
         self.timer.start(10)
         loop = QEventLoop()
