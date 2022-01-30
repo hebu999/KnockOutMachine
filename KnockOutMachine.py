@@ -6,7 +6,9 @@
 __author__ = "Heiner Buescher"
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
+from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import QThread, pyqtSignal, QEventLoop
+from PyQt5.QtMultimedia import QMediaPlayer
 from random import randint
 import sys
 import csv
@@ -27,6 +29,7 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.timer_thread = TimerThread()
         self.timer_thread.update_signal.connect(self.update_lcd)
+
     #     self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
     #     self.rpi.handlesignalend(self.cleanup_revpi)
     #     self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
@@ -43,7 +46,11 @@ class Ui_MainWindow(object):
         self.pixmap = QtGui.QPixmap("display/main_menu.png")
         self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
         self.pictures.setPixmap(self.scaledPixmap)
-        self.player = QtMultimedia.QMediaPlayer()
+        self.player = QtMultimedia.QMediaPlayer(None, QMediaPlayer.VideoSurface)
+
+        self.video_frame = QVideoWidget()
+        self.video_frame.resize(960, 540)
+        self.video_frame.hide()
 
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
@@ -99,6 +106,7 @@ class Ui_MainWindow(object):
         self.toggleButton.setFont(buttonFont)
         self.toggleButton.setObjectName("toggleButton")
         self.toggleButton.clicked.connect(lambda: toggle_input())
+        self.toggleButton.clicked.connect(lambda: self.timer_thread.toggle_signal.emit())
         self.toggleButton.hide()
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
@@ -145,6 +153,7 @@ class Ui_MainWindow(object):
         self.gridPictures.addWidget(self.lcdCounter, 1, 1, QtCore.Qt.AlignCenter)
         self.gridPictures.addWidget(self.messages, 2, 1, QtCore.Qt.AlignCenter)
         self.gridPictures.addWidget(self.pictures, 3, 1, QtCore.Qt.AlignCenter)
+        self.gridPictures.addWidget(self.video_frame, 3, 1, QtCore.Qt.AlignCenter)
         self.gridPictures.addWidget(self.tableview, 0, QtCore.Qt.AlignCenter)
 
         self.hboxButtons = QtWidgets.QHBoxLayout()
@@ -214,7 +223,7 @@ class Ui_MainWindow(object):
 
     def on_start_button_clicked(self):
         self.lcdCounter.display("00.00")
-        self.movie = QtGui.QMovie("display/dog.gif")
+        self.movie = QtGui.QMovie("")
         self.lcdCounter.setEnabled(True)
         self.lcdCounter.show()
         self.cancelTimerButton.show()
@@ -233,6 +242,7 @@ class Ui_MainWindow(object):
         self.startButton.setDisabled(True)
         self.startButton.hide()
         self.pictures.hide()
+        self.video_frame.hide()
         self.cancelScoreButton.show()
         self.tableview.show()
         self.model.clear()
@@ -270,12 +280,10 @@ class Ui_MainWindow(object):
         self.messages.setText("Glas erkannt, wenn bereit los!")
         if Input_I1:
             self.glass_set_timer.stop()
-            self.movie.start()
             self.start_timer()
 
     def start_timer(self):
         self.messages.hide()
-        # self.pictures.show()
         # self.pictures.setMovie(self.movie)
         # self.lcdCounter.display(runTime)
         self.timer_thread.start()
@@ -293,60 +301,84 @@ class Ui_MainWindow(object):
             writer.writerow(row)
         self.input_dialogue.clear()
 
-    def play_sound(self, fileName):
-        self.filename = "home/heiner/PyCharmProjects/KnockOutMachine/sounds/" + fileName
-        self.url = QtCore.QUrl.fromLocalFile(self.filename)
+    def play_sound(self, fileName, playVideo):
+
+        if playVideo:
+            self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/display/" + fileName
+            self.video_frame.show()
+            self.player.setVideoOutput(self.video_frame)
+            self.player.setPosition(0)
+        else:
+            self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/sounds/" + fileName
+        self.url = QtCore.QUrl.fromLocalFile(self.file_path)
         self.content = QtMultimedia.QMediaContent(self.url)
         self.player.setMedia(self.content)
         self.player.play()
 
     def show_pictures(self, runTime):
+        self.lcdCounter.setFixedSize(1050, 450)
+        self.play_video = False
         if runTime <= 200:
+            self.file_name = "cheering.mp3"
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
             if self.case(1):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/Trump.gif")
             else:
-                self.movie = QtGui.QMovie("display/dog.gif")
+                self.file_name = "endlich_normale_leute.mp4"
+                self.play_video = True
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("cheering.mp3")
+            self.play_sound(self.file_name, self.play_video)
 
         elif runTime <= 500:
+            self.file_name = "applause-2.mp3"
             self.rand = randint(0, 6)
             self.case = lambda x: self.rand < x
             if self.case(1):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/1.webp")
             elif self.case(2):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/2.gif")
             elif self.case(3):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/3.gif")
             elif self.case(4):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/4.gif")
             elif self.case(5):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/5.gif")
             else:
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/6.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("applause-2.mp3")
+            self.play_sound(self.file_name, self.play_video)
 
         elif runTime <= 800:
+            self.file_name = "laughter-2.mp3"
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
             if self.case(1):
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/Bier2.gif")
             else:
+                self.pictures.show()
                 self.movie = QtGui.QMovie("display/1.webp")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("laughter-2.mp3")
+            self.play_sound(self.file_name, self.play_video)
 
         else:
+            self.pictures.show()
+            self.file_name = "laughter-2.mp3"
             self.movie = QtGui.QMovie("display/dog.gif")
             self.movie.start()
             self.pictures.setMovie(self.movie)
-            self.play_sound("laughter-2.mp3")
+            self.play_sound(self.file_name, self.play_video)
 
     def exit_score_function(self):
         self.tableview.hide()
@@ -368,8 +400,10 @@ class Ui_MainWindow(object):
         self.player.stop()
         self.lcdCounter.setEnabled(False)
         self.lcdCounter.hide()
+        self.lcdCounter.setFixedSize(1350, 750)
         self.tableview.hide()
         self.toggleButton.hide()
+        self.video_frame.hide()
         self.cancelTimerButton.hide()
         self.messages.hide()
         self.highscoreButton.show()
@@ -388,6 +422,8 @@ class Ui_MainWindow(object):
 class TimerThread(QThread):
     update_signal = pyqtSignal()
     stop_timer_signal = pyqtSignal()
+    toggle_signal = pyqtSignal()
+    finished = pyqtSignal()
 
     def __init__(self):
         super(TimerThread, self).__init__()
@@ -395,26 +431,33 @@ class TimerThread(QThread):
         self.timer = QtCore.QTimer()
         self.timer.moveToThread(self)
         self.timer.timeout.connect(self.tick_timer)
-        self.timer.timeout.connect(self.stop_timer)
         self.stop_timer_signal.connect(self.hard_stop_timer)
+        self.toggle_signal.connect(self.stop_timer)
 
     def update_timer(self):
         global runTime
         runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
         self.update_signal.emit()
+        if self.now / 100 == 99:
+            toggle_input()
+            self.stop_timer()
 
     @QtCore.pyqtSlot()
     def hard_stop_timer(self):
         self.hard_stop = True
         self.timer.stop()
+        self.finished.emit()
+        self.quit()
 
     def stop_timer(self):
-        if not Input_I1 or self.now / 100 == 99 or self.hard_stop:
-            self.timer.stop()
-            self.quit()
-        if not self.timer.isActive() and not self.hard_stop:
-            # self.show_pictures(now)
-            ui.input_window.show()
+        if self.timer.isActive():
+            if not Input_I1 or self.hard_stop:
+                self.timer.stop()
+                self.finished.emit()
+                self.quit()
+                if not self.hard_stop:
+                    ui.show_pictures(self.now)
+                    ui.input_window.show()
 
     def tick_timer(self):
         self.now += 1
