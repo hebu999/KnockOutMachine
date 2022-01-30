@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
 
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(self.toggle_input, prefire=True)
+        self.rpi.io.I_1.reg_event(toggle_input, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
@@ -97,12 +97,6 @@ class Ui_MainWindow(object):
         self.startButton.setFont(buttonFont)
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
-
-        self.input_dialogue = QtWidgets.QInputDialog(self.centralwidget)
-        self.input_dialogue.setInputMode(QtWidgets.QInputDialog.TextInput)
-        self.input_dialogue.resize(self.input_dialogue.sizeHint())
-        self.input_dialogue.setWindowTitle("Namenseingabe")
-        self.input_dialogue.setLabelText("Bitte Namen eingeben:")
 
         self.inputButton = QtWidgets.QPushButton(self.centralwidget)
         self.inputButton.setObjectName("inputButton")
@@ -394,7 +388,6 @@ class Ui_MainWindow(object):
 
     def exit_score_function(self):
         self.tableview.hide()
-        self.toggleButton.hide()
         self.cancelScoreButton.hide()
         self.highscoreButton.show()
         self.startButton.setEnabled(True)
@@ -405,7 +398,7 @@ class Ui_MainWindow(object):
         self.pictures.setPixmap(self.scaledPixmap)
 
     def exit_timer_function(self):
-        # self.rpi.exit(full=False)
+        self.rpi.exit(full=False)
         self.timer_thread.stop_timer_signal.emit()
         self.glass_set_timer.stop()
         self.glass_not_set_timer.stop()
