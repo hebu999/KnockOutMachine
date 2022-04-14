@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
 
         self.main_picture = QtWidgets.QLabel(self.centralwidget)
-        self.pixmap = QtGui.QPixmap("display/main_menu.png")
+        self.pixmap = QtGui.QPixmap("display\\main_menu.png")
         self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
         self.main_picture.setPixmap(self.scaledPixmap)
 
@@ -212,10 +212,10 @@ class Ui_MainWindow(object):
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
         # self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
-        self.cancelTimerButton.setIcon(QtGui.QIcon("display/cancel_button.png"))
+        self.cancelTimerButton.setIcon(QtGui.QIcon("display\\cancel_button.png"))
         self.cancelTimerButton.setIconSize(QtCore.QSize(50, 50))
         self.cancelTimerButton.setStyleSheet("background-color: white;")
-        self.cancelScoreButton.setIcon(QtGui.QIcon("display/cancel_button.png"))
+        self.cancelScoreButton.setIcon(QtGui.QIcon("display\\cancel_button.png"))
         self.cancelScoreButton.setIconSize(QtCore.QSize(50, 50))
         self.cancelScoreButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: #113f0c;")
@@ -311,12 +311,12 @@ class Ui_MainWindow(object):
     def play_sound(self, fileName, playVideo):
 
         if playVideo:
-            self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/display/" + fileName
+            self.file_path = "display\\" + fileName
             self.video_frame.show()
             self.player.setVideoOutput(self.video_frame)
             self.player.setPosition(0)
         else:
-            self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/sounds/" + fileName
+            self.file_path = "sounds\\" + fileName
         self.url = QtCore.QUrl.fromLocalFile(self.file_path)
         self.content = QtMultimedia.QMediaContent(self.url)
         self.player.setMedia(self.content)
