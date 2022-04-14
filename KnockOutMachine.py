@@ -42,12 +42,17 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
-        self.pictures = QtWidgets.QLabel(self.centralwidget)
-        self.pictures.setObjectName("pictures")
-        self.pictures.setFixedSize(900, 853)
+        self.main_picture = QtWidgets.QLabel(self.centralwidget)
         self.pixmap = QtGui.QPixmap("display/main_menu.png")
         self.scaledPixmap = self.pixmap.scaled(900, 900, QtCore.Qt.KeepAspectRatio)
-        self.pictures.setPixmap(self.scaledPixmap)
+        self.main_picture.setPixmap(self.scaledPixmap)
+
+        self.pictures = QtWidgets.QLabel()
+        self.pictures.setObjectName("pictures")
+        self.pictures.setAlignment(QtCore.Qt.AlignCenter)
+        self.pictures.setMinimumSize(500, 500)
+        self.pictures.hide()
+
         self.player = QtMultimedia.QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
         self.video_frame = QVideoWidget()
@@ -59,10 +64,10 @@ class Ui_MainWindow(object):
         mfont = QtGui.QFont("Times", 80, QtGui.QFont.Bold)
         self.messages = QtWidgets.QLineEdit(self.centralwidget)
         self.messages.setObjectName("messages")
+        self.messages.setAlignment(QtCore.Qt.AlignCenter)
         self.messages.setPalette(palette)
         self.messages.setReadOnly(True)
         self.messages.setFont(mfont)
-        self.messages.setAlignment(QtCore.Qt.AlignCenter)
         self.messages.setFixedSize(1400, 200)
         self.messages.hide()
 
@@ -85,6 +90,7 @@ class Ui_MainWindow(object):
         self.input_window.move(850, 820)
         # self.input_window.setWindowFlags(
         #     QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        self.input_window.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
         self.input_layout = QtWidgets.QFormLayout()
 
@@ -143,12 +149,13 @@ class Ui_MainWindow(object):
         self.glass_not_set_timer.setInterval(100)
         self.glass_not_set_timer.timeout.connect(self.glass_not_set)
 
-        self.gridPictures = QtWidgets.QGridLayout()
-        self.gridPictures.addWidget(self.lcdCounter, 1, 1, QtCore.Qt.AlignCenter)
-        self.gridPictures.addWidget(self.messages, 2, 1, QtCore.Qt.AlignCenter)
-        self.gridPictures.addWidget(self.pictures, 3, 1, QtCore.Qt.AlignCenter)
-        self.gridPictures.addWidget(self.video_frame, 3, 1, QtCore.Qt.AlignCenter)
-        self.gridPictures.addWidget(self.tableview, 0, QtCore.Qt.AlignCenter)
+        self.vboxPictures = QtWidgets.QVBoxLayout()
+        self.vboxPictures.addWidget(self.main_picture, 0, QtCore.Qt.AlignCenter)
+        self.vboxPictures.addWidget(self.lcdCounter, 0, QtCore.Qt.AlignCenter)
+        self.vboxPictures.addWidget(self.messages, 0, QtCore.Qt.AlignCenter)
+        self.vboxPictures.addWidget(self.pictures, 1)
+        self.vboxPictures.addWidget(self.video_frame, 0, QtCore.Qt.AlignCenter)
+        self.vboxPictures.addWidget(self.tableview, 0, QtCore.Qt.AlignCenter)
 
         self.hboxButtons = QtWidgets.QHBoxLayout()
         self.hboxButtons.addWidget(self.startButton)
@@ -162,10 +169,10 @@ class Ui_MainWindow(object):
 
         # TODO set correct layout span and stretch
         self.vbox = QtWidgets.QVBoxLayout()
-        self.vbox.addLayout(self.gridPictures)
+        self.vbox.addLayout(self.vboxPictures)
         self.vbox.addStretch(1)
         self.vbox.addLayout(self.hboxButtons)
-        self.vbox.addStretch(3)
+        self.vbox.addStretch(1)
 
         self.input_dialogue.textChanged.connect(self.enable_input_button)
         self.input_dialogue.returnPressed.connect(self.inputButton.click)
@@ -220,7 +227,7 @@ class Ui_MainWindow(object):
         self.cancelTimerButton.show()
         self.startButton.hide()
         self.highscoreButton.hide()
-        self.pictures.hide()
+        self.main_picture.hide()
         self.rpi.mainloop(blocking=False)
 
         if Input_I1:
@@ -232,7 +239,7 @@ class Ui_MainWindow(object):
         self.highscoreButton.hide()
         self.startButton.setDisabled(True)
         self.startButton.hide()
-        self.pictures.hide()
+        self.main_picture.hide()
         self.video_frame.hide()
         self.cancelScoreButton.show()
         self.tableview.show()
@@ -307,6 +314,7 @@ class Ui_MainWindow(object):
         self.player.play()
 
     def show_pictures(self, runTime):
+        self.messages.hide()
         self.lcdCounter.setFixedSize(1050, 450)
         self.play_video = False
         if runTime <= 200:
@@ -329,7 +337,7 @@ class Ui_MainWindow(object):
             self.case = lambda x: self.rand < x
             if self.case(1):
                 self.pictures.show()
-                self.movie = QtGui.QMovie("display/1.webp")
+                self.movie = QtGui.QMovie("display/Bier.gif")
             elif self.case(2):
                 self.pictures.show()
                 self.movie = QtGui.QMovie("display/2.gif")
@@ -358,7 +366,7 @@ class Ui_MainWindow(object):
                 self.movie = QtGui.QMovie("display/Bier2.gif")
             else:
                 self.pictures.show()
-                self.movie = QtGui.QMovie("display/1.webp")
+                self.movie = QtGui.QMovie("display/1.jpeg")
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound(self.file_name, self.play_video)
@@ -389,13 +397,12 @@ class Ui_MainWindow(object):
     def exit_score_function(self):
         self.tableview.hide()
         self.cancelScoreButton.hide()
+        self.pictures.hide()
         self.highscoreButton.show()
         self.startButton.setEnabled(True)
         self.startButton.show()
-        self.pictures.show()
+        self.main_picture.show()
 
-        self.pixmap = QtGui.QPixmap("display/main_menu.png")
-        self.pictures.setPixmap(self.scaledPixmap)
 
     def exit_timer_function(self):
         self.rpi.exit(full=False)
@@ -410,13 +417,11 @@ class Ui_MainWindow(object):
         self.video_frame.hide()
         self.cancelTimerButton.hide()
         self.messages.hide()
+        self.pictures.hide()
         self.highscoreButton.show()
         self.startButton.setEnabled(True)
         self.startButton.show()
-        self.pictures.show()
-
-        self.pixmap = QtGui.QPixmap("display/main_menu.png")
-        self.pictures.setPixmap(self.scaledPixmap)
+        self.main_picture.show()
 
     # TODO add cleanup if necessary
     def cleanup_revpi(self):
