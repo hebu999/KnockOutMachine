@@ -23,7 +23,7 @@ runTime = "00.00"
 
 def toggle_input(ioname, iovalue):
     global Input_I1
-    Input_I1 = not Input_I1
+    Input_I1 = iovalue
 
 
 class Ui_MainWindow(object):
@@ -35,6 +35,7 @@ class Ui_MainWindow(object):
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
         self.rpi.io.I_1.reg_event(toggle_input, prefire=True)
+        self.rpi.io.I_1.reg_event(self.send_toggle_signal)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
@@ -300,12 +301,12 @@ class Ui_MainWindow(object):
 
     def play_sound(self, fileName, playVideo):
         if playVideo:
-            self.file_path = "/KnockOutMachine/display/" + fileName
+            self.file_path = "/var/lib/revpipyload/KnockOutMachine/display/" + fileName
             self.video_frame.show()
             self.player.setVideoOutput(self.video_frame)
             self.player.setPosition(0)
         else:
-            self.file_path = "/KnockOutMachine/sounds/" + fileName
+            self.file_path = "/var/lib/revpipyload/KnockOutMachine/sounds/" + fileName
         self.url = QtCore.QUrl.fromLocalFile(self.file_path)
         self.content = QtMultimedia.QMediaContent(self.url)
         self.player.setMedia(self.content)
@@ -319,12 +320,12 @@ class Ui_MainWindow(object):
             self.file_name = "cheering.mp3"
             self.rand = randint(0, 2)
             self.case = lambda x: self.rand < x
-            if self.case(1):
-                self.pictures.show()
-                self.movie = QtGui.QMovie("display/Trump.gif")
-            else:
-                self.file_name = "endlich_normale_leute.mp4"
-                self.play_video = True
+            #if self.case(1):
+            self.pictures.show()
+            self.movie = QtGui.QMovie("display/Trump.gif")
+            #else:
+                #self.file_name = "endlich_normale_leute.mp4"
+                #self.play_video = True
             self.movie.start()
             self.pictures.setMovie(self.movie)
             self.play_sound(self.file_name, self.play_video)
@@ -390,6 +391,9 @@ class Ui_MainWindow(object):
             self.rpi.io.O_1 = not self.rpi.io.O_1
             self.rpi.io.O_2 = not self.rpi.io.O_2
             self.rpi.io.O_3 = not self.rpi.io.O_3
+
+    def send_toggle_signal(self, ioname, iovalue):
+        self.timer_thread.toggle_signal.emit()
 
     def exit_score_function(self):
         self.tableview.hide()
