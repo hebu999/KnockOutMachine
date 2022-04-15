@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
 
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(toggle_input, prefire=True)
+        self.rpi.io.I_1.reg_event(toggle_input(), prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
@@ -167,7 +167,6 @@ class Ui_MainWindow(object):
         self.input_layout.addRow("", self.inputButton)
         self.input_window.setLayout(self.input_layout)
 
-        # TODO set correct layout span and stretch
         self.vbox = QtWidgets.QVBoxLayout()
         self.vbox.addLayout(self.vboxPictures)
         self.vbox.addStretch(1)
@@ -300,14 +299,13 @@ class Ui_MainWindow(object):
         self.input_dialogue.clear()
 
     def play_sound(self, fileName, playVideo):
-
         if playVideo:
-            self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/display/" + fileName
+            self.file_path = "/KnockOutMachine/display/" + fileName
             self.video_frame.show()
             self.player.setVideoOutput(self.video_frame)
             self.player.setPosition(0)
         else:
-            self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/sounds/" + fileName
+            self.file_path = "/KnockOutMachine/sounds/" + fileName
         self.url = QtCore.QUrl.fromLocalFile(self.file_path)
         self.content = QtMultimedia.QMediaContent(self.url)
         self.player.setMedia(self.content)
@@ -381,7 +379,6 @@ class Ui_MainWindow(object):
 
     # TODO toggle outputs in certain pattern
     def change_output(self, highscore):
-
         # red leds
         if highscore:
             self.rpi.io.O_5 = True
@@ -402,7 +399,6 @@ class Ui_MainWindow(object):
         self.startButton.setEnabled(True)
         self.startButton.show()
         self.main_picture.show()
-
 
     def exit_timer_function(self):
         self.rpi.exit(full=False)
