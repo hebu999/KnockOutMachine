@@ -21,7 +21,7 @@ Input_I1 = True
 runTime = "00.00"
 
 
-def toggle_input():
+def toggle_input(ioname, iovalue):
     global Input_I1
     Input_I1 = not Input_I1
 
@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
 
         self.rpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.rpi.handlesignalend(self.cleanup_revpi)
-        self.rpi.io.I_1.reg_event(toggle_input(), prefire=True)
+        self.rpi.io.I_1.reg_event(toggle_input, prefire=True)
 
     def setup_ui(self, MainWindow):
         MainWindow.setObjectName("KnockOutMachine")
