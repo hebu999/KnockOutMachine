@@ -17,12 +17,19 @@ import locale
 # import revpimodio2
 
 Input_I1 = True
+Input_I2 = True
 runTime = "00.00"
+runTime_i2 = "00.00"
 
 
-def toggle_input():
+def toggle_input_i1():
     global Input_I1
     Input_I1 = not Input_I1
+
+
+def toggle_input_i2():
+    global Input_I2
+    Input_I2 = not Input_I2
 
 
 class Ui_MainWindow(object):
@@ -61,7 +68,7 @@ class Ui_MainWindow(object):
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
         mfont = QtGui.QFont("Times", 80, QtGui.QFont.Bold)
-        self.messages = QtWidgets.QLineEdit(self.centralwidget)
+        self.messages, self.messages_i2 = QtWidgets.QLineEdit(self.centralwidget), QtWidgets.QLineEdit(self.centralwidget)
         self.messages.setObjectName("messages")
         self.messages.setAlignment(QtCore.Qt.AlignCenter)
         self.messages.setPalette(palette)
@@ -69,6 +76,14 @@ class Ui_MainWindow(object):
         self.messages.setFont(mfont)
         self.messages.setFixedSize(1400, 200)
         self.messages.hide()
+
+        self.messages_i2.setObjectName("messages_i2")
+        self.messages_i2.setAlignment(QtCore.Qt.AlignCenter)
+        self.messages_i2.setPalette(palette)
+        self.messages_i2.setReadOnly(True)
+        self.messages_i2.setFont(mfont)
+        self.messages_i2.setFixedSize(700, 100)
+        self.messages_i2.hide()
 
         self.model = QtGui.QStandardItemModel(self.centralwidget)
         tableFont = QtGui.QFont("Times", 16)
@@ -103,6 +118,12 @@ class Ui_MainWindow(object):
         self.startButton.setObjectName("startButton")
         self.startButton.clicked.connect(lambda: self.on_start_button_clicked())
 
+        self.duelButton = QtWidgets.QPushButton(self.centralwidget)
+        self.duelButton.setFixedSize(191, 71)
+        self.duelButton.setFont(buttonFont)
+        self.duelButton.setObjectName("duelButton")
+        self.duelButton.clicked.connect(lambda: self.on_duel_button_clicked())
+
         self.inputButton = QtWidgets.QPushButton(self.centralwidget)
         self.inputButton.setObjectName("inputButton")
         self.inputButton.resize(self.inputButton.sizeHint())
@@ -112,9 +133,17 @@ class Ui_MainWindow(object):
         self.toggleButton.setFixedSize(191, 71)
         self.toggleButton.setFont(buttonFont)
         self.toggleButton.setObjectName("toggleButton")
-        self.toggleButton.clicked.connect(lambda: toggle_input())
+        self.toggleButton.clicked.connect(lambda: toggle_input_i1())
         self.toggleButton.clicked.connect(lambda: self.timer_thread.toggle_signal.emit())
         self.toggleButton.hide()
+
+        self.toggleButton_2 = QtWidgets.QPushButton(self.centralwidget)
+        self.toggleButton_2.setFixedSize(191, 71)
+        self.toggleButton_2.setFont(buttonFont)
+        self.toggleButton_2.setObjectName("toggleButton")
+        self.toggleButton_2.clicked.connect(lambda: toggle_input_i2())
+        self.toggleButton_2.clicked.connect(lambda: self.timer_thread.toggle_signal.emit())
+        self.toggleButton_2.hide()
 
         self.highscoreButton = QtWidgets.QPushButton(self.centralwidget)
         self.highscoreButton.setFont(buttonFont)
@@ -146,19 +175,38 @@ class Ui_MainWindow(object):
         self.lcdCounter.display("00.00")
         self.lcdCounter.hide()
 
-        self.glass_not_set_timer, self.glass_set_timer = QtCore.QTimer(), QtCore.QTimer()
+        self.lcdCounter_2 = QtWidgets.QLCDNumber(self.centralwidget)
+        self.lcdCounter_2.setEnabled(False)
+        self.lcdPalette = self.lcdCounter_2.palette()
+        self.lcdCounter_2.setFixedSize(675, 375)
+        self.lcdCounter_2.setSmallDecimalPoint(False)
+        self.lcdCounter_2.setDigitCount(5)
+        self.lcdCounter_2.setObjectName("lcdCounter")
+        self.lcdCounter_2.display("00.00")
+        self.lcdCounter_2.hide()
+
+        self.glass_not_set_timer, self.glass_not_set_timer_i2, self.glass_set_timer, self.glass_set_timer_i2 = QtCore.QTimer(), QtCore.QTimer(), QtCore.QTimer(), QtCore.QTimer()
 
         self.glass_set_timer.setSingleShot(True)
         self.glass_set_timer.setInterval(100)
         self.glass_set_timer.timeout.connect(self.glass_set)
 
+        self.glass_set_timer_i2.setSingleShot(True)
+        self.glass_set_timer_i2.setInterval(100)
+        self.glass_set_timer_i2.timeout.connect(self.glass_set)
+
         self.glass_not_set_timer.setSingleShot(True)
         self.glass_not_set_timer.setInterval(100)
         self.glass_not_set_timer.timeout.connect(self.glass_not_set)
 
+        self.glass_not_set_timer_i2.setSingleShot(True)
+        self.glass_not_set_timer_i2.setInterval(100)
+        self.glass_not_set_timer_i2.timeout.connect(self.glass_not_set)
+
         self.vboxPictures = QtWidgets.QVBoxLayout()
         self.vboxPictures.addWidget(self.main_picture, 0, QtCore.Qt.AlignCenter)
         self.vboxPictures.addWidget(self.lcdCounter, 0, QtCore.Qt.AlignCenter)
+        self.vboxPictures.addWidget(self.lcdCounter_2, 0, QtCore.Qt.AlignCenter)
         self.vboxPictures.addWidget(self.messages, 0, QtCore.Qt.AlignCenter)
         self.vboxPictures.addWidget(self.pictures, 1)
         self.vboxPictures.addWidget(self.video_frame, 0, QtCore.Qt.AlignCenter)
@@ -166,7 +214,9 @@ class Ui_MainWindow(object):
 
         self.hboxButtons = QtWidgets.QHBoxLayout()
         self.hboxButtons.addWidget(self.startButton)
+        self.hboxButtons.addWidget(self.duelButton)
         self.hboxButtons.addWidget(self.toggleButton)
+        self.hboxButtons.addWidget(self.toggleButton_2)
         self.hboxButtons.addWidget(self.highscoreButton)
         self.hboxButtons.addWidget(self.cancelTimerButton)
         self.hboxButtons.addWidget(self.cancelScoreButton)
@@ -204,12 +254,17 @@ class Ui_MainWindow(object):
         MainWindow.showFullScreen()
         MainWindow.setStyleSheet("background-color: #113f0c;")
 
-        self.startButton.setText(_translate("KnockOutMachine", "Messung starten"))
+        self.startButton.setText(_translate("KnockOutMachine", "Einzelmodus"))
         self.startButton.setStyleSheet("background-color: white;")
+        self.duelButton.setText(_translate("KnockOutMachine", "Duelmodus"))
+        self.duelButton.setStyleSheet("background-color: white;")
         self.inputButton.setText(_translate("KnockOutMachine", "Eingabe bestätigen"))
         self.messages.setStyleSheet("border: none;")
+        self.messages_i2.setStyleSheet("border: none;")
         self.toggleButton.setText(_translate("KnockOutMachine", "Toggle Input"))
         self.toggleButton.setStyleSheet("background-color: white;")
+        self.toggleButton_2.setText(_translate("KnockOutMachine", "Toggle Input 2"))
+        self.toggleButton_2.setStyleSheet("background-color: white;")
         self.highscoreButton.setText(_translate("KnockOutMachine", "Bestenliste"))
         self.highscoreButton.setStyleSheet("background-color: white;")
         # self.cancelButton.setText(_translate("KnockOutMachine", "Abbrechen"))
@@ -221,6 +276,8 @@ class Ui_MainWindow(object):
         self.cancelScoreButton.setStyleSheet("background-color: white;")
         self.lcdCounter.setStyleSheet("background-color: #113f0c;")
         self.lcdCounter.setStyleSheet("color: white;")
+        self.lcdCounter_2.setStyleSheet("background-color: #113f0c;")
+        self.lcdCounter_2.setStyleSheet("color: white;")
         self.tableview.setStyleSheet("background-color: white;")
 
     def enable_input_button(self):
@@ -237,6 +294,7 @@ class Ui_MainWindow(object):
         self.cancelTimerButton.show()
         self.toggleButton.show()
         self.startButton.hide()
+        self.duelButton.hide()
         self.highscoreButton.hide()
         self.main_picture.hide()
 
@@ -245,10 +303,39 @@ class Ui_MainWindow(object):
         else:
             self.glass_set()
 
+    def on_duel_button_clicked(self):
+        self.lcdCounter.display("00.00")
+        self.lcdCounter.setFixedSize(675, 375)
+        self.lcdCounter.setEnabled(True)
+        self.lcdCounter.show()
+        self.lcdCounter_2.display("00.00")
+        self.lcdCounter_2.setFixedSize(675, 375)
+        self.lcdCounter_2.setEnabled(True)
+        self.lcdCounter_2.show()
+        self.cancelTimerButton.show()
+        self.toggleButton.show()
+        self.toggleButton_2.show()
+        self.startButton.hide()
+        self.duelButton.hide()
+        self.highscoreButton.hide()
+        self.main_picture.hide()
+
+        if Input_I1:
+            self.glass_not_set()
+        else:
+            self.glass_set()
+
+        if Input_I2:
+            self.glass_not_set_i2()
+        else:
+            self.glass_set_i2()
+
     def on_high_score_button_clicked(self):
         self.highscoreButton.hide()
         self.startButton.setDisabled(True)
         self.startButton.hide()
+        self.duelButton.hide()
+        self.duelButton.setDisabled(True)
         self.main_picture.hide()
         self.video_frame.hide()
         self.cancelScoreButton.show()
@@ -282,6 +369,14 @@ class Ui_MainWindow(object):
             self.glass_not_set_timer.stop()
             self.glass_set()
 
+    def glass_not_set_i2(self):
+        self.glass_not_set_timer_i2.start()
+        self.messages_i2.show()
+        self.messages_i2.setText("Bitte Glas vor Sensor stellen!")
+        if not Input_I2:
+            self.glass_not_set_timer_i2.stop()
+            self.glass_set_i2()
+
     def glass_set(self):
         self.glass_set_timer.start()
         self.messages.show()
@@ -290,14 +385,29 @@ class Ui_MainWindow(object):
             self.glass_set_timer.stop()
             self.start_timer()
 
+    def glass_set_i2(self):
+        self.glass_set_timer_i2.start()
+        self.messages_i2.show()
+        self.messages_i2.setText("Glas erkannt, wenn bereit los!")
+        if Input_I2:
+            self.glass_set_timer_i2.stop()
+            self.start_timer_2()
+
     def start_timer(self):
         self.messages.hide()
         # self.pictures.setMovie(self.movie)
         # self.lcdCounter.display(runTime)
         self.timer_thread.start()
 
+    def start_timer_2(self):
+        self.messages_i2.hide()
+        # self.pictures.setMovie(self.movie)
+        # self.lcdCounter.display(runTime)
+        self.timer_thread.start()
+
     def update_lcd(self):
         self.lcdCounter.display(runTime)
+        self.lcdCounter_2.display(runTime_i2)
 
     def update_scores(self, inputName, runTime):
         self.datetime = QtCore.QDateTime.currentDateTime()
@@ -310,7 +420,6 @@ class Ui_MainWindow(object):
         self.input_dialogue.clear()
 
     def play_sound(self, fileName, playVideo):
-
         if playVideo:
             self.file_path = "home/heiner/PyCharmProjects/KnockOutMachine/display/" + fileName
             self.video_frame.show()
@@ -397,8 +506,9 @@ class Ui_MainWindow(object):
         self.highscoreButton.show()
         self.startButton.setEnabled(True)
         self.startButton.show()
+        self.duelButton.setEnabled(True)
+        self.duelButton.show()
         self.main_picture.show()
-
 
     def exit_timer_function(self):
         # self.rpi.exit(full=False)
@@ -409,8 +519,11 @@ class Ui_MainWindow(object):
         self.lcdCounter.setEnabled(False)
         self.lcdCounter.hide()
         self.lcdCounter.setFixedSize(1350, 750)
+        self.lcdCounter_2.setEnabled(False)
+        self.lcdCounter_2.hide()
         self.tableview.hide()
         self.toggleButton.hide()
+        self.toggleButton_2.hide()
         self.video_frame.hide()
         self.cancelTimerButton.hide()
         self.messages.hide()
@@ -418,6 +531,8 @@ class Ui_MainWindow(object):
         self.highscoreButton.show()
         self.startButton.setEnabled(True)
         self.startButton.show()
+        self.duelButton.setEnabled(True)
+        self.duelButton.show()
         self.main_picture.show()
 
     # TODO add cleanup if necessary
@@ -445,7 +560,7 @@ class TimerThread(QThread):
         runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
         self.update_signal.emit()
         if self.now / 100 == 99:
-            toggle_input()
+            toggle_input_i1()
             self.stop_timer()
 
     @QtCore.pyqtSlot()
