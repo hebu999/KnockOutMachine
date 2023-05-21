@@ -17,7 +17,7 @@ import locale
 # import revpimodio2
 
 Input_I1 = True
-Input_I2 = True
+Input_I2 = False
 runTime = "00.00"
 runTime_i2 = "00.00"
 
@@ -68,7 +68,8 @@ class Ui_MainWindow(object):
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
         mfont = QtGui.QFont("Times", 80, QtGui.QFont.Bold)
-        self.messages, self.messages_i2 = QtWidgets.QLineEdit(self.centralwidget), QtWidgets.QLineEdit(self.centralwidget)
+        self.messages, self.messages_i2 = QtWidgets.QLineEdit(self.centralwidget), QtWidgets.QLineEdit(
+            self.centralwidget)
         self.messages.setObjectName("messages")
         self.messages.setAlignment(QtCore.Qt.AlignCenter)
         self.messages.setPalette(palette)
@@ -325,7 +326,7 @@ class Ui_MainWindow(object):
         else:
             self.glass_set()
 
-        if Input_I2:
+        if not Input_I2:
             self.glass_not_set_i2()
         else:
             self.glass_set_i2()
@@ -364,7 +365,7 @@ class Ui_MainWindow(object):
     def glass_not_set(self):
         self.glass_not_set_timer.start()
         self.messages.show()
-        self.messages.setText("Bitte Glas vor Sensor stellen!")
+        self.messages.setText("Bitte Glas vor linken Sensor stellen!")
         if not Input_I1:
             self.glass_not_set_timer.stop()
             self.glass_set()
@@ -372,15 +373,15 @@ class Ui_MainWindow(object):
     def glass_not_set_i2(self):
         self.glass_not_set_timer_i2.start()
         self.messages_i2.show()
-        self.messages_i2.setText("Bitte Glas vor Sensor stellen!")
-        if not Input_I2:
+        self.messages_i2.setText("Bitte Glas vor rechten Sensor stellen!")
+        if Input_I2:
             self.glass_not_set_timer_i2.stop()
             self.glass_set_i2()
 
     def glass_set(self):
         self.glass_set_timer.start()
         self.messages.show()
-        self.messages.setText("Glas erkannt, wenn bereit los!")
+        self.messages.setText("Glas links erkannt, wenn bereit los!")
         if Input_I1:
             self.glass_set_timer.stop()
             self.start_timer()
@@ -388,8 +389,8 @@ class Ui_MainWindow(object):
     def glass_set_i2(self):
         self.glass_set_timer_i2.start()
         self.messages_i2.show()
-        self.messages_i2.setText("Glas erkannt, wenn bereit los!")
-        if Input_I2:
+        self.messages_i2.setText("Glas rechts erkannt, wenn bereit los!")
+        if not Input_I2:
             self.glass_set_timer_i2.stop()
             self.start_timer_2()
 
@@ -527,6 +528,7 @@ class Ui_MainWindow(object):
         self.video_frame.hide()
         self.cancelTimerButton.hide()
         self.messages.hide()
+        self.messages_i2.hide()
         self.pictures.hide()
         self.highscoreButton.show()
         self.startButton.setEnabled(True)
@@ -557,10 +559,15 @@ class TimerThread(QThread):
 
     def update_timer(self):
         global runTime
+        global runTime_i2
         runTime = "%02d.%02d" % (self.now / 100, self.now % 100)
+        runTime_i2 = "%02d.%02d" % (self.now / 100, self.now % 100)
         self.update_signal.emit()
         if self.now / 100 == 99:
             toggle_input_i1()
+            self.stop_timer()
+        if self.now_i2 / 100 == 99:
+            toggle_input_i2()
             self.stop_timer()
 
     @QtCore.pyqtSlot()
@@ -580,12 +587,23 @@ class TimerThread(QThread):
                     ui.show_pictures(self.now)
                     ui.input_window.show()
 
+    def stop_timer_i2(self):
+        if self.timer.isActive():
+            if Input_I2 or self.hard_stop:
+                self.timer.stop()
+                self.finished.emit()
+                self.quit()
+                if not self.hard_stop:
+                    ui.show_pictures(self.now)
+                    ui.input_window.show()
+
     def tick_timer(self):
         self.now += 1
         self.update_timer()
 
     def run(self):
         self.now = 0
+        self.now_i2 = 0
         self.hard_stop = False
         self.update_timer()
         self.timer.start(10)
